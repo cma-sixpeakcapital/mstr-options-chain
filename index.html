@@ -139,6 +139,24 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
 .chain-loading .spin{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){.chain-stats{grid-template-columns:repeat(4,1fr)}}
+
+/* Roll Instruction Cards */
+.roll-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;position:relative;overflow:hidden}
+.roll-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.roll-card.t1::before{background:#448aff}.roll-card.t2::before{background:#00e5ff}.roll-card.t3::before{background:#00e676}.roll-card.t4::before{background:#ffd700}.roll-card.t5::before{background:#ff9100}
+.roll-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.roll-card-tranche{font-family:var(--font-mono);font-size:13px;font-weight:600}
+.roll-card-action{font-size:10px;padding:2px 6px;border-radius:3px;font-family:var(--font-mono);font-weight:500}
+.roll-card-action.roll-up{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2)}
+.roll-card-action.roll-out{background:rgba(68,138,255,.1);color:var(--blue);border:1px solid rgba(68,138,255,.2)}
+.roll-card-action.roll-down{background:rgba(255,145,0,.1);color:var(--orange);border:1px solid rgba(255,145,0,.2)}
+.roll-card-action.hold{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)}
+.roll-card-row{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;padding:2px 0}
+.roll-card-row .lbl{color:var(--text3)}.roll-card-row .val{color:var(--text)}
+.roll-card-arrow{text-align:center;font-size:16px;color:var(--gold);margin:6px 0}
+.roll-card-credit{text-align:center;font-family:var(--font-mono);font-size:14px;font-weight:600;margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+@media(max-width:1100px){#rollInstrCards{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){#rollInstrCards{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -345,6 +363,16 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       </div>
       <div class="chain-grid" id="chainWrap">
         <div class="chain-loading">Select an expiration and click Refresh to load the options chain</div>
+      </div>
+      <!-- Roll Instructions -->
+      <div id="rollInstructions" style="display:none;margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+          <span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:1px">15Δ Ladder — Roll Instructions</span>
+          <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono)" id="rollInstrTime">--</span>
+        </div>
+        <div id="rollInstrSummary" style="margin-bottom:12px"></div>
+        <div id="rollInstrCards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+        <div id="rollInstrTotals" style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)"></div>
       </div>
     </div>
 
@@ -1387,6 +1415,7 @@ async function loadFullChain() {
     fullChain = opts;
     renderFullChain(opts, expiry);
     updateChainStats(opts, expiry);
+    generateRollInstructions(opts, expiry);
     document.getElementById('chainStatsBar').style.display = 'grid';
   } catch(e) {
     document.getElementById('chainWrap').innerHTML =
@@ -1500,6 +1529,191 @@ function reRenderChain() {
   if (!fullChain.length) return;
   const expiry = document.getElementById('chainExpirySelect').value;
   renderFullChain(fullChain, expiry);
+}
+
+// ============================================================
+// ROLL INSTRUCTIONS GENERATOR (15Δ Blended Ladder)
+// ============================================================
+function generateRollInstructions(opts, targetExpiry) {
+  const container = document.getElementById('rollInstructions');
+  const cardsEl = document.getElementById('rollInstrCards');
+  const summaryEl = document.getElementById('rollInstrSummary');
+  const totalsEl = document.getElementById('rollInstrTotals');
+
+  if (!opts.length || !state.positions.length) {
+    container.style.display = 'none';
+    return;
+  }
+
+  // Build call map: strike → option data
+  const calls = opts.filter(o => o.option_type === 'call');
+  const callMap = {};
+  calls.forEach(c => {
+    callMap[c.strike] = {
+      strike: c.strike,
+      bid: c.bid, ask: c.ask, last: c.last,
+      mid: ((c.bid || 0) + (c.ask || 0)) / 2,
+      delta: c.greeks ? c.greeks.delta : null,
+      iv: c.greeks ? c.greeks.mid_iv : null,
+      theta: c.greeks ? c.greeks.theta : null,
+      oi: c.open_interest || 0,
+      volume: c.volume || 0
+    };
+  });
+
+  const targetDTE = Math.round((new Date(targetExpiry) - new Date()) / 86400000);
+
+  // Per-tranche target deltas — the 15Δ blended ladder
+  const ladderTargets = {
+    T1: { delta: 0.13, label: '13Δ (tightest)' },
+    T2: { delta: 0.16, label: '16Δ' },
+    T3: { delta: 0.19, label: '19Δ' },
+    T4: { delta: 0.23, label: '23Δ' },
+    T5: { delta: 0.28, label: '28Δ (widest)' }
+  };
+
+  // Sort calls by strike for scanning
+  const sortedCalls = Object.values(callMap).filter(c => c.delta !== null && c.delta > 0).sort((a, b) => b.strike - a.strike);
+
+  // For each tranche, find the strike closest to its target delta
+  function findTargetStrike(targetDelta) {
+    if (!sortedCalls.length) return null;
+    let best = sortedCalls[0];
+    let bestDiff = Math.abs(best.delta - targetDelta);
+    for (const c of sortedCalls) {
+      const diff = Math.abs(c.delta - targetDelta);
+      if (diff < bestDiff) { best = c; bestDiff = diff; }
+    }
+    return best;
+  }
+
+  let totalBTC = 0;  // BTC to close current
+  let totalSTO = 0;  // premium from new sells
+  let totalNetCredit = 0;
+  const trancheColors = { T1: '#448aff', T2: '#00e5ff', T3: '#00e676', T4: '#ffd700', T5: '#ff9100' };
+  let cardsHTML = '';
+  const instructions = [];
+
+  state.positions.forEach(pos => {
+    const target = ladderTargets[pos.tranche];
+    if (!target) return;
+
+    const newOpt = findTargetStrike(target.delta);
+    if (!newOpt) return;
+
+    // Current position info
+    const currentExpiry = pos.expiry;
+    const currentStrike = pos.strike;
+    const currentDTE = Math.max(0, Math.ceil((new Date(currentExpiry) - new Date()) / 86400000));
+
+    // Get current option mid for BTC (buy-to-close cost)
+    const currentChainOpt = callMap[currentStrike];
+    const btcMid = currentChainOpt ? currentChainOpt.mid : (pos.liveMid || pos.currentPrice || 0);
+
+    // New option STO credit (sell-to-open)
+    const stoMid = newOpt.mid;
+
+    // Net credit per share = STO - BTC
+    // If rolling to same expiry chain, BTC uses chain data
+    // If rolling OUT to new expiry, BTC uses live position data
+    const isSameExpiry = currentExpiry === targetExpiry;
+    const btcCost = isSameExpiry ? btcMid : (pos.liveMid || pos.currentPrice || btcMid);
+    const netPerShare = stoMid - btcCost;
+    const netTotal = netPerShare * pos.contracts * 100;
+
+    totalBTC += btcCost * pos.contracts * 100;
+    totalSTO += stoMid * pos.contracts * 100;
+    totalNetCredit += netTotal;
+
+    // Determine action type
+    let action, actionClass;
+    if (newOpt.strike > currentStrike) { action = 'ROLL UP & OUT'; actionClass = 'roll-up'; }
+    else if (newOpt.strike < currentStrike) { action = 'ROLL DOWN & OUT'; actionClass = 'roll-down'; }
+    else if (targetExpiry !== currentExpiry) { action = 'ROLL OUT'; actionClass = 'roll-out'; }
+    else { action = 'HOLD'; actionClass = 'hold'; }
+
+    const otmPct = ((newOpt.strike - state.mstrPrice) / state.mstrPrice * 100).toFixed(1);
+    const deltaMatch = Math.abs(newOpt.delta - target.delta) < 0.03 ? 'var(--green)' : 'var(--orange)';
+
+    instructions.push({
+      tranche: pos.tranche, action, currentStrike, currentExpiry, currentDTE,
+      newStrike: newOpt.strike, newDelta: newOpt.delta, targetDelta: target.delta,
+      btcCost, stoMid, netPerShare, netTotal, contracts: pos.contracts,
+      iv: newOpt.iv, theta: newOpt.theta, otmPct, oi: newOpt.oi
+    });
+
+    cardsHTML += `
+      <div class="roll-card ${pos.tranche.toLowerCase()}">
+        <div class="roll-card-header">
+          <span class="roll-card-tranche" style="color:${trancheColors[pos.tranche]}">${pos.tranche}</span>
+          <span class="roll-card-action ${actionClass}">${action}</span>
+        </div>
+        <div class="roll-card-row"><span class="lbl">Target Δ</span><span class="val">${target.label}</span></div>
+        <div style="background:var(--surface3);border-radius:4px;padding:6px 8px;margin:6px 0">
+          <div class="roll-card-row"><span class="lbl">BTC</span><span class="val" style="color:var(--red)">$${currentStrike} ${currentExpiry.slice(5)} (${currentDTE}d)</span></div>
+          <div style="font-size:10px;color:var(--text3);text-align:center">↓ cost: $${btcCost.toFixed(2)}/sh</div>
+        </div>
+        <div class="roll-card-arrow">↓</div>
+        <div style="background:var(--surface3);border-radius:4px;padding:6px 8px;margin:6px 0">
+          <div class="roll-card-row"><span class="lbl">STO</span><span class="val" style="color:var(--green)">$${newOpt.strike} ${targetExpiry.slice(5)} (${targetDTE}d)</span></div>
+          <div style="font-size:10px;color:var(--text3);text-align:center">credit: $${stoMid.toFixed(2)}/sh</div>
+        </div>
+        <div class="roll-card-row"><span class="lbl">Δ actual</span><span class="val" style="color:${deltaMatch}">${(newOpt.delta * 100).toFixed(1)}Δ</span></div>
+        <div class="roll-card-row"><span class="lbl">IV</span><span class="val">${newOpt.iv ? (newOpt.iv * 100).toFixed(1) + '%' : '—'}</span></div>
+        <div class="roll-card-row"><span class="lbl">% OTM</span><span class="val">${otmPct}%</span></div>
+        <div class="roll-card-row"><span class="lbl">θ</span><span class="val">${newOpt.theta ? newOpt.theta.toFixed(3) : '—'}</span></div>
+        <div class="roll-card-row"><span class="lbl">OI</span><span class="val">${newOpt.oi.toLocaleString()}</span></div>
+        <div class="roll-card-row"><span class="lbl">Contracts</span><span class="val">${pos.contracts}</span></div>
+        <div class="roll-card-credit" style="color:${netPerShare >= 0 ? 'var(--green)' : 'var(--red)'}">
+          ${netPerShare >= 0 ? '+' : ''}$${netPerShare.toFixed(2)}/sh
+          <div style="font-size:11px;color:var(--text2)">${netTotal >= 0 ? '+' : ''}$${Math.round(netTotal).toLocaleString()} total</div>
+        </div>
+      </div>`;
+  });
+
+  // Summary bar
+  const blendedDelta = instructions.length > 0
+    ? (instructions.reduce((s, i) => s + i.newDelta * i.contracts, 0) / instructions.reduce((s, i) => s + i.contracts, 0))
+    : 0;
+  const totalContracts = instructions.reduce((s, i) => s + i.contracts, 0);
+
+  summaryEl.innerHTML = `
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;color:var(--text2)">
+      <span>Rolling <strong style="color:var(--text)">${totalContracts}</strong> contracts across <strong style="color:var(--text)">${instructions.length}</strong> tranches</span>
+      <span>Current: <strong style="color:var(--text)">${state.positions[0]?.expiry || '—'}</strong></span>
+      <span>→ Target: <strong style="color:var(--gold)">${targetExpiry}</strong> (${targetDTE}d)</span>
+      <span>Blended Δ: <strong style="color:${Math.abs(blendedDelta - 0.15) < 0.03 ? 'var(--green)' : 'var(--orange)'}">${(blendedDelta * 100).toFixed(1)}Δ</strong> (target 15Δ)</span>
+    </div>`;
+
+  cardsEl.innerHTML = cardsHTML;
+
+  // Totals bar
+  const weeklyTheta = instructions.reduce((s, i) => s + (i.theta || 0) * i.contracts * 100 * 5, 0);
+  totalsEl.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center;font-family:var(--font-mono)">
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">BTC Cost</div>
+        <div style="font-size:16px;font-weight:600;color:var(--red)">$${Math.round(totalBTC).toLocaleString()}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">STO Credit</div>
+        <div style="font-size:16px;font-weight:600;color:var(--green)">$${Math.round(totalSTO).toLocaleString()}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Net Credit</div>
+        <div style="font-size:16px;font-weight:600;color:${totalNetCredit >= 0 ? 'var(--green)' : 'var(--red)'}">${totalNetCredit >= 0 ? '+' : ''}$${Math.round(totalNetCredit).toLocaleString()}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Weekly θ Decay</div>
+        <div style="font-size:16px;font-weight:600;color:var(--green)">$${Math.round(Math.abs(weeklyTheta)).toLocaleString()}</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text3);text-align:center">
+      All prices at mid. Execute each leg as <span style="color:var(--text)">BTC (buy-to-close current) → STO (sell-to-open new)</span>. Roll in order T5→T1 (widest delta first).
+    </div>`;
+
+  document.getElementById('rollInstrTime').textContent = 'Generated ' + new Date().toLocaleTimeString();
+  container.style.display = 'block';
 }
 
 // ============================================================
