@@ -332,6 +332,18 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <span><span style="display:inline-block;width:10px;height:2px;border-radius:1px;background:var(--rust-glow);margin-right:4px;vertical-align:middle"></span>EXIT TRIGGER $1.6M</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--rust);margin-right:4px"></span>Actual Portfolio</span>
       </div>
+      <!-- Projected BTC & MSTR Prices Table -->
+      <div style="margin-top:16px;overflow-x:auto">
+        <table id="scenarioPriceTable" style="font-size:11px;min-width:900px">
+          <thead>
+            <tr>
+              <th style="border-bottom:2px solid var(--rust);min-width:70px"></th>
+              <th id="spt-h" colspan="21" style="border-bottom:2px solid var(--rust);font-size:9px;letter-spacing:0.15em;text-align:center">PROJECTED PRICES BY MONTH</th>
+            </tr>
+          </thead>
+          <tbody id="scenarioPriceBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Panel 6b: Options Chain for Next Roll Target -->
@@ -1103,17 +1115,33 @@ function initCharts() {
   // Scenario projections with actual dates, $1.6M exit trigger
   // Month 0 = current (Mar 29, 2026), Month 1 = Apr 2026, etc.
   const labels = ['Now','Apr 26','May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27','Apr 27','May 27','Jun 27','Jul 27','Aug 27','Sep 27','Oct 27','Nov 27'];
-  // S1: Range Apr-Jul, Rally Aug-Nov (EXIT ~Nov at $1.6M), Moon Dec+
-  const s1 = [869,900,840,870,925,1060,1210,1420,1610,1780,1980,2200,2410,2620,2840,3050,3260,3350,3420,3460,3500];
-  // S2: Crash Apr-Jun, Range Jul-Dec, Rally Jan+ (EXIT ~Apr 27 at $1.6M)
-  const s2 = [869,810,680,720,810,850,885,920,890,925,1070,1230,1410,1620,1790,1965,2155,2335,2500,2660,2810];
-  // S3: V-shape Apr→$250K Jan 27 (EXIT ~Aug at $1.6M), continues to $250K by Jan 2027
-  const s3 = [869,855,1020,1260,1540,1810,2050,2350,2680,3020,3180,null,null,null,null,null,null,null,null,null,null];
-  // $1.6M exit line
+
+  // ── Portfolio values ($K) ──
+  const s1 = [777,900,840,870,925,1060,1210,1420,1610,1780,1980,2200,2410,2620,2840,3050,3260,3350,3420,3460,3500];
+  const s2 = [777,810,680,720,810,850,885,920,890,925,1070,1230,1410,1620,1790,1965,2155,2335,2500,2660,2810];
+  const s3 = [777,855,1020,1260,1540,1810,2050,2350,2680,3020,3180,null,null,null,null,null,null,null,null,null,null];
+
+  // ── Projected BTC prices ($K) per scenario ──
+  // S1: Sideways/dip Apr-Jul, rally Aug+
+  const s1Btc = [68,66,60,62,66,78,92,110,128,145,165,185,205,225,245,265,280,290,296,300,305];
+  // S2: Crash to ~$42K, slow recovery, rally Jan 27+
+  const s2Btc = [68,58,42,48,58,62,65,68,64,68,82,98,115,135,150,168,185,200,215,230,245];
+  // S3: V-shape rip
+  const s3Btc = [68,65,82,105,130,155,180,210,245,280,295,null,null,null,null,null,null,null,null,null,null];
+
+  // ── Projected MSTR prices ($) per scenario ──
+  // MSTR roughly tracks BTC with mNAV leverage (~1.1-1.3x)
+  const s1Mstr = [125,120,108,112,122,148,178,218,256,295,340,385,430,475,520,560,595,620,635,645,655];
+  const s2Mstr = [125,105,72,82,105,112,118,124,116,124,155,190,225,270,305,345,385,420,455,490,525];
+  const s3Mstr = [125,118,155,205,260,320,380,450,530,615,650,null,null,null,null,null,null,null,null,null,null];
+
   const exitLine = Array(21).fill(1600);
 
   const actual = state.portfolioHistory.map(p => Math.round(p.value / 1000));
   while (actual.length < 21) actual.push(null);
+
+  // Store for tooltip access
+  const scenarioPrices = { s1Btc, s2Btc, s3Btc, s1Mstr, s2Mstr, s3Mstr };
 
   scenarioChart = new Chart(sCtx, {
     type: 'line',
@@ -1132,14 +1160,49 @@ function initCharts() {
       interaction: { mode: 'index', intersect: false },
       plugins: { legend: { display: false }, tooltip: {
         backgroundColor: '#1E2C44', titleColor: '#F8FAFC', bodyColor: '#BFC7DA',
-        borderColor: 'rgba(191,199,218,0.12)', borderWidth: 1, padding: 10,
-        callbacks: { label: ctx => ctx.raw !== null ? ctx.dataset.label + ': $' + ctx.raw.toLocaleString() + 'K' : null }
+        borderColor: 'rgba(191,199,218,0.12)', borderWidth: 1, padding: 12,
+        callbacks: {
+          label: function(ctx) {
+            if (ctx.raw === null) return null;
+            const i = ctx.dataIndex;
+            const ds = ctx.dataset.label;
+            let line = ds + ': $' + ctx.raw.toLocaleString() + 'K';
+            if (ds.includes('S1')) line += '  (BTC $' + (s1Btc[i]||'—') + 'K · MSTR $' + (s1Mstr[i]||'—') + ')';
+            else if (ds.includes('S2')) line += '  (BTC $' + (s2Btc[i]||'—') + 'K · MSTR $' + (s2Mstr[i]||'—') + ')';
+            else if (ds.includes('S3')) line += '  (BTC $' + (s3Btc[i]||'—') + 'K · MSTR $' + (s3Mstr[i]||'—') + ')';
+            return line;
+          }
+        }
       }},
       scales: {
         x: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' } } },
         y: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' }, callback: v => '$' + v + 'K' }, min: 500, max: 3600 }
       }
     }
+  });
+
+  // ── Populate price projection table ──
+  const tbody = document.getElementById('scenarioPriceBody');
+  const shortLabels = labels.map(l => l.replace(' 26','').replace(' 27',''));
+  // Header row with month labels
+  let headerRow = '<tr><td></td>';
+  labels.forEach(l => { headerRow += `<td style="text-align:center;padding:3px 4px;font-size:9px;color:var(--text3);white-space:nowrap">${l}</td>`; });
+  headerRow += '</tr>';
+  tbody.innerHTML = headerRow;
+
+  const rows = [
+    { label: 'S1 BTC', data: s1Btc, color: '#7B9464', fmt: v => v ? '$'+v+'K' : '—' },
+    { label: 'S1 MSTR', data: s1Mstr, color: '#7B9464', fmt: v => v ? '$'+v : '—' },
+    { label: 'S2 BTC', data: s2Btc, color: '#EF4444', fmt: v => v ? '$'+v+'K' : '—' },
+    { label: 'S2 MSTR', data: s2Mstr, color: '#EF4444', fmt: v => v ? '$'+v : '—' },
+    { label: 'S3 BTC', data: s3Btc, color: '#8B5CF6', fmt: v => v ? '$'+v+'K' : '—' },
+    { label: 'S3 MSTR', data: s3Mstr, color: '#8B5CF6', fmt: v => v ? '$'+v : '—' },
+  ];
+  rows.forEach(r => {
+    let tr = `<tr><td style="font-weight:700;color:${r.color};white-space:nowrap;padding:3px 8px 3px 0;font-size:10px">${r.label}</td>`;
+    r.data.forEach(v => { tr += `<td style="text-align:center;padding:3px 4px;font-size:10px;color:var(--text2)">${r.fmt(v)}</td>`; });
+    tr += '</tr>';
+    tbody.innerHTML += tr;
   });
 
   // mNAV chart
