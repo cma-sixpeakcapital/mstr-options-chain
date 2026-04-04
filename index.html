@@ -562,19 +562,19 @@ let state = {
   liveOptions: {},
   settings: {
     tradierToken: 'NmVn72M4E7bi6xCUiS95uKn88Jrs', shares: 4000, basis: 140,
-    cash: 194674.78, margin: 216443.99,
+    cash: 189272.79, margin: 216443.99,
     marginRates: { above100k: 4.50, mid: 4.75, below50k: 4.90 },
-    btcHoldings: 5.51830738, stratBtc: 762099, stratShares: 345084, stratDebt: 18263,
+    btcHoldings: 5.53007986, stratBtc: 762099, stratShares: 345084, stratDebt: 18263,
     stratPref: 10009, stratCash: 2250, stratEV: 59517,
     stratMktCap: 43555, stratMnav: 1.18, stratIV: 69,
     target: 250000
   },
   positions: [
-    { tranche: 'T1', strike: 165, expiry: '2026-05-08', contracts: 8, premium: 1.01, openDelta: 0.13, currentPrice: 0 },
-    { tranche: 'T2', strike: 160, expiry: '2026-05-08', contracts: 8, premium: 1.32, openDelta: 0.16, currentPrice: 0 },
-    { tranche: 'T3', strike: 155, expiry: '2026-05-08', contracts: 8, premium: 1.77, openDelta: 0.19, currentPrice: 0 },
-    { tranche: 'T4', strike: 150, expiry: '2026-05-08', contracts: 8, premium: 2.25, openDelta: 0.23, currentPrice: 0 },
-    { tranche: 'T5', strike: 145, expiry: '2026-05-08', contracts: 8, premium: 2.82, openDelta: 0.28, currentPrice: 0 }
+    { tranche: 'T1', strike: 165, expiry: '2026-05-08', contracts: 8, premium: 1.68, openDelta: 0.13, currentPrice: 1.07 },
+    { tranche: 'T2', strike: 160, expiry: '2026-05-08', contracts: 8, premium: 2.14, openDelta: 0.16, currentPrice: 1.32 },
+    { tranche: 'T3', strike: 155, expiry: '2026-05-08', contracts: 8, premium: 2.68, openDelta: 0.19, currentPrice: 1.78 },
+    { tranche: 'T4', strike: 150, expiry: '2026-05-08', contracts: 8, premium: 3.47, openDelta: 0.23, currentPrice: 2.37 },
+    { tranche: 'T5', strike: 145, expiry: '2026-05-08', contracts: 8, premium: 4.36, openDelta: 0.28, currentPrice: 3.18 }
   ],
   rolls: [
     { date: '2026-03-17', tranche: 'T1', credit: 1.22, contracts: 8, notes: 'STO Apr24 $210 (10Δ ladder open)' },
@@ -942,7 +942,7 @@ function updatePositions() {
     const posIV = hasLive && pos.liveIV ? (pos.liveIV * 100).toFixed(1) + '%' : iv.toFixed(0) + '%*';
     const otm = ((pos.strike - state.mstrPrice) / state.mstrPrice * 100);
     const btcBreach = btcToBreachStrike(pos.strike);
-    const currentMid = hasLive ? pos.liveMid : null;
+    const currentMid = hasLive ? pos.liveMid : (pos.currentPrice || null);
     const pl = currentMid ? (pos.premium - currentMid) * pos.contracts * 100 : 0;
     const theta = hasLive && pos.liveTheta ? pos.liveTheta : 0;
 
