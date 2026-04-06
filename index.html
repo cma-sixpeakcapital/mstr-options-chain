@@ -92,7 +92,8 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
 .alert-icon{font-size:14px;flex-shrink:0}
 
 /* Scenario chart area */
-.chart-container{position:relative;height:280px;margin-top:10px;width:100%;transform:translateZ(0)}
+.chart-container{position:relative;height:280px;margin-top:10px;width:100%}
+.chart-container canvas{display:block}
 
 /* Settings modal */
 .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(11,24,51,.85);z-index:100;align-items:center;justify-content:center}
@@ -324,7 +325,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <span class="panel-title">Scenario Projection vs Actuals — Apr 2026 → Nov 2027</span>
         <span class="panel-badge badge-live">LIVE</span>
       </div>
-      <div class="chart-container"><canvas id="scenarioChart" style="width:100%;height:280px"></canvas></div>
+      <div class="chart-container"><canvas id="scenarioChart"></canvas></div>
       <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--text3);flex-wrap:wrap">
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--green);margin-right:4px"></span>S1: Light Bear → exit Nov 2026</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--red);margin-right:4px"></span>S2: Crash First → exit Apr 2027</span>
@@ -403,7 +404,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <span class="panel-title">mNAV Trend</span>
         <span class="panel-badge badge-live">LIVE</span>
       </div>
-      <div class="chart-container" style="height:180px"><canvas id="mnavChart" style="width:100%;height:180px"></canvas></div>
+      <div class="chart-container" style="height:180px"><canvas id="mnavChart"></canvas></div>
       <div class="metric-grid" style="margin-top:8px">
         <div class="metric"><div class="metric-label">Current</div><div class="metric-value" id="mnav-current">--</div></div>
         <div class="metric"><div class="metric-label">7d Avg</div><div class="metric-value" id="mnav-7d">--</div></div>
@@ -1888,9 +1889,27 @@ updateClock();
 setInterval(updateClock, 1000);
 refreshAll();
 setInterval(refreshAll, 60000);
-// Charts must init after full page layout — DOMContentLoaded is too early
+// Charts init + canvas-to-img workaround for Chrome GPU compositing bug
+function syncCanvasToImg(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  let img = document.getElementById(canvasId + '-img');
+  if (!img) {
+    img = document.createElement('img');
+    img.id = canvasId + '-img';
+    img.style.cssText = 'width:100%;height:100%;display:block;position:absolute;top:0;left:0';
+    canvas.parentElement.appendChild(img);
+    canvas.style.display = 'none';
+  }
+  img.src = canvas.toDataURL('image/png');
+}
 window.addEventListener('load', function() {
   initCharts();
+  // Convert canvas to img to avoid Chrome canvas compositing issues
+  setTimeout(function() {
+    syncCanvasToImg('scenarioChart');
+    syncCanvasToImg('mnavChart');
+  }, 200);
 });
 </script>
 </body>
