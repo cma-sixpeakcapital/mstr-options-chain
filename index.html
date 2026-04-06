@@ -786,16 +786,16 @@ function calcMnav() {
 
 function calcGrossMnav() {
   // mNAV = Enterprise Value / BTC NAV
-  // Strategy.com formula: EV = Market Cap + Debt - Cash (prefs NOT included)
+  // Strategy.com formula: EV = Market Cap + Debt + Pref - Cash
   const s = state.settings;
   if (state.mstrPrice > 0 && state.btcPrice > 0) {
     const mktCap = state.mstrPrice * s.stratShares * 1000;
-    const ev = mktCap + (s.stratDebt * 1e6) - (s.stratCash * 1e6);
+    const ev = mktCap + (s.stratDebt * 1e6) + (s.stratPref * 1e6) - (s.stratCash * 1e6);
     const btcNav = s.stratBtc * state.btcPrice;
-    if (btcNav === 0) return s.stratMnav || 1.18;
+    if (btcNav === 0) return s.stratMnav || 1.13;
     return ev / btcNav;
   }
-  return s.stratMnav || 1.18;
+  return s.stratMnav || 1.13;
 }
 
 function calcMarginInterest() {
