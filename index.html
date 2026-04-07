@@ -573,50 +573,15 @@ let state = {
   ]
 };
 
-// Load from localStorage
-// Auto-detect when HTML defaults change by hashing the default state.
-// If the hash doesn't match what's cached, localStorage is stale → clear it.
-function hashDefaults() {
-  // Hash the parts of state that get edited in the HTML source
-  const key = JSON.stringify({
-    s: state.settings,
-    p: state.positions,
-    r: state.rolls
-  });
-  let h = 0;
-  for (let i = 0; i < key.length; i++) {
-    h = ((h << 5) - h + key.charCodeAt(i)) | 0;
-  }
-  return 'auto-' + Math.abs(h).toString(36);
-}
-
-const DATA_VERSION = hashDefaults();
-
+// No localStorage caching — state comes from HTML defaults on every load
 function loadState() {
-  try {
-    const saved = localStorage.getItem('mstr-options-desk');
-    const version = localStorage.getItem('mstr-options-desk-version');
-    if (saved && version === DATA_VERSION) {
-      const parsed = JSON.parse(saved);
-      state = { ...state, ...parsed };
-    } else {
-      // Defaults changed since last visit — clear stale cache
-      localStorage.removeItem('mstr-options-desk');
-      localStorage.setItem('mstr-options-desk-version', DATA_VERSION);
-      console.log('Options Desk: defaults updated, cache cleared. Version:', DATA_VERSION);
-    }
-  } catch(e) { console.error('Failed to load state', e); }
+  // Clear any old cached data
+  localStorage.removeItem('mstr-options-desk');
+  localStorage.removeItem('mstr-options-desk-version');
 }
 
 function saveState() {
-  try {
-    localStorage.setItem('mstr-options-desk-version', DATA_VERSION);
-    localStorage.setItem('mstr-options-desk', JSON.stringify({
-      settings: state.settings, positions: state.positions,
-      rolls: state.rolls, dcaLog: state.dcaLog,
-      mnavHistory: state.mnavHistory, portfolioHistory: state.portfolioHistory
-    }));
-  } catch(e) { console.error('Failed to save state', e); }
+  // No-op — state is not persisted
 }
 
 // ============================================================
