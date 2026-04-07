@@ -234,7 +234,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <div class="metric"><div class="metric-label">MSTR Shares</div><div class="metric-value" id="port-mstr">--</div></div>
         <div class="metric"><div class="metric-label">Cash + Premium</div><div class="metric-value" id="port-cash">--</div></div>
         <div class="metric"><div class="metric-label">BTC Holdings</div><div class="metric-value" id="port-btc">--</div></div>
-        <div class="metric"><div class="metric-label">DCA BTC</div><div class="metric-value" id="port-dca">--</div></div>
+
         <div class="metric"><div class="metric-label">Margin</div><div class="metric-value down" id="port-margin">--</div></div>
         <div class="metric"><div class="metric-label">Net Portfolio</div><div class="metric-value" id="port-total" style="color:var(--rust)">--</div></div>
       </div>
@@ -398,38 +398,6 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       </div>
     </div>
 
-    <!-- Panel 7: mNAV Tracker -->
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">mNAV Trend</span>
-        <span class="panel-badge badge-live">LIVE</span>
-      </div>
-      <div class="chart-container" style="height:180px"><canvas id="mnavChart"></canvas></div>
-      <div class="metric-grid" style="margin-top:8px">
-        <div class="metric"><div class="metric-label">Current</div><div class="metric-value" id="mnav-current">--</div></div>
-        <div class="metric"><div class="metric-label">7d Avg</div><div class="metric-value" id="mnav-7d">--</div></div>
-        <div class="metric"><div class="metric-label">Trend</div><div class="metric-value" id="mnav-trend">--</div></div>
-      </div>
-    </div>
-
-    <!-- Panel 8: BTC Holdings & DCA -->
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">BTC Holdings & DCA</span>
-        <span class="panel-badge badge-manual">MANUAL</span>
-      </div>
-      <div class="metric-grid">
-        <div class="metric"><div class="metric-label">Cold Storage</div><div class="metric-value" id="btc-cold">5.500</div></div>
-        <div class="metric"><div class="metric-label">DCA BTC</div><div class="metric-value" id="btc-dca-total">0.000</div></div>
-        <div class="metric"><div class="metric-label">Total BTC</div><div class="metric-value" style="color:var(--orange)" id="btc-total-holdings">5.500</div></div>
-        <div class="metric"><div class="metric-label">DCA Spent</div><div class="metric-value" id="dca-spent">$0</div></div>
-        <div class="metric"><div class="metric-label">DCA Avg Price</div><div class="metric-value" id="dca-avg">--</div></div>
-        <div class="metric"><div class="metric-label">BTC Value</div><div class="metric-value" style="color:var(--rust)" id="btc-value-total">--</div></div>
-      </div>
-      <div style="margin-top:10px">
-        <button onclick="openDcaLog()">+ Log DCA Purchase</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -534,24 +502,6 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
   </div>
 </div>
 
-<!-- DCA Log Modal -->
-<div class="modal-overlay" id="dcaLogModal">
-  <div class="modal">
-    <h2>BTC DCA Log</h2>
-    <div class="input-row">
-      <div class="input-group"><label>Date</label><input type="date" id="dca-date"></div>
-      <div class="input-group"><label>Amount ($)</label><input type="number" id="dca-amount" value="200"></div>
-      <div class="input-group"><label>BTC Price</label><input type="number" id="dca-btc-price" placeholder="66000"></div>
-      <div class="input-group"><label>BTC Received</label><input type="number" id="dca-btc-received" step="0.000001" placeholder="0.003030"></div>
-    </div>
-    <button onclick="saveDca()" style="margin:8px 0">+ Log DCA</button>
-    <table>
-      <thead><tr><th>Date</th><th>$</th><th>BTC Price</th><th>BTC</th><th></th></tr></thead>
-      <tbody id="dca-log-table"></tbody>
-    </table>
-    <div style="margin-top:12px"><button onclick="closeDcaLog()">Close</button></div>
-  </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
@@ -563,9 +513,9 @@ let state = {
   liveOptions: {},
   settings: {
     tradierToken: 'NmVn72M4E7bi6xCUiS95uKn88Jrs', shares: 4000, basis: 140,
-    cash: 189273, margin: 216443.99,
+    cash: 194581.06, margin: 216443.99,
     marginRates: { above100k: 4.50, mid: 4.75, below50k: 4.90 },
-    btcHoldings: 5.53007986, stratBtc: 766970, stratShares: 345590, stratDebt: 8254,
+    btcHoldings: 5.5358984, stratBtc: 766970, stratShares: 345590, stratDebt: 8254,
     stratPref: 10336, stratCash: 2250, stratEV: 60338,
     stratMktCap: 44049, stratMnav: 1.13, stratIV: 75,
     target: 250000
@@ -913,7 +863,6 @@ function updatePortfolio() {
   document.getElementById('port-mstr').textContent = '$' + Math.round(pv.mstrVal).toLocaleString();
   document.getElementById('port-cash').textContent = '$' + Math.round(pv.cashRemaining).toLocaleString();
   document.getElementById('port-btc').textContent = '$' + Math.round(state.settings.btcHoldings * state.btcPrice).toLocaleString();
-  document.getElementById('port-dca').textContent = '$' + Math.round(pv.dcaTotal * state.btcPrice).toLocaleString();
   document.getElementById('port-margin').textContent = '($' + Math.round(pv.margin).toLocaleString() + ')';
   document.getElementById('port-total').textContent = '$' + Math.round(pv.net).toLocaleString();
 
@@ -1111,18 +1060,6 @@ function updateIncomeTracker() {
   }
 }
 
-function updateBtcHoldings() {
-  const dcaTotal = state.dcaLog.reduce((sum, d) => sum + d.btcReceived, 0);
-  const dcaSpent = state.dcaLog.reduce((sum, d) => sum + d.amount, 0);
-  const totalBtc = state.settings.btcHoldings + dcaTotal;
-
-  document.getElementById('btc-cold').textContent = state.settings.btcHoldings.toFixed(3);
-  document.getElementById('btc-dca-total').textContent = dcaTotal.toFixed(6);
-  document.getElementById('btc-total-holdings').textContent = totalBtc.toFixed(3);
-  document.getElementById('dca-spent').textContent = '$' + Math.round(dcaSpent).toLocaleString();
-  document.getElementById('dca-avg').textContent = dcaTotal > 0 ? '$' + Math.round(dcaSpent / dcaTotal).toLocaleString() : '--';
-  document.getElementById('btc-value-total').textContent = '$' + Math.round(totalBtc * state.btcPrice).toLocaleString();
-}
 
 function updateAlerts() {
   const container = document.getElementById('alerts-container');
@@ -1147,7 +1084,7 @@ function updateAlerts() {
 // ============================================================
 // CHARTS
 // ============================================================
-let scenarioChart, mnavChart;
+let scenarioChart;
 
 function initCharts() {
   const sCtx = document.getElementById('scenarioChart');
@@ -1246,30 +1183,6 @@ function initCharts() {
     tbody.innerHTML += tr;
   });
 
-  // mNAV chart
-  const mCtx = document.getElementById('mnavChart');
-  const mnavLabels = state.mnavHistory.slice(-30).map(m => new Date(m.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}));
-  const mnavData = state.mnavHistory.slice(-30).map(m => m.value);
-
-  mnavChart = new Chart(mCtx, {
-    type: 'line',
-    data: {
-      labels: mnavLabels.length > 0 ? mnavLabels : ['Today'],
-      datasets: [{
-        data: mnavData.length > 0 ? mnavData : [calcGrossMnav()],
-        borderColor: '#C4581A', backgroundColor: 'rgba(196,88,26,.08)', fill: true,
-        tension: .3, borderWidth: 2, pointRadius: 1
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 9 }, maxRotation: 45 } },
-        y: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 9 }, callback: v => v.toFixed(2) + 'x' } }
-      }
-    }
-  });
 }
 
 function recordDailySnapshot() {
@@ -1292,16 +1205,6 @@ function recordDailySnapshot() {
 
   saveState();
 
-  // Update mNAV panel
-  document.getElementById('mnav-current').textContent = mnav.toFixed(3) + 'x';
-  if (state.mnavHistory.length >= 7) {
-    const last7 = state.mnavHistory.slice(-7);
-    const avg7 = last7.reduce((s, m) => s + m.value, 0) / 7;
-    document.getElementById('mnav-7d').textContent = avg7.toFixed(3) + 'x';
-    const trend = mnav - avg7;
-    document.getElementById('mnav-trend').textContent = (trend >= 0 ? '+' : '') + trend.toFixed(3);
-    document.getElementById('mnav-trend').style.color = trend > 0.05 ? 'var(--orange)' : trend < -0.05 ? 'var(--green)' : 'var(--text2)';
-  }
 }
 
 // ============================================================
@@ -1397,38 +1300,6 @@ function renderRollLog() {
 
 function deleteRoll(i) { state.rolls.splice(i, 1); saveState(); renderRollLog(); updateAll(); }
 
-function openDcaLog() {
-  renderDcaLog();
-  document.getElementById('dcaLogModal').classList.add('active');
-}
-function closeDcaLog() { document.getElementById('dcaLogModal').classList.remove('active'); }
-
-function saveDca() {
-  const amount = parseFloat(document.getElementById('dca-amount').value);
-  const btcPrice = parseFloat(document.getElementById('dca-btc-price').value) || state.btcPrice;
-  const btcReceived = parseFloat(document.getElementById('dca-btc-received').value) || (amount / btcPrice);
-  state.dcaLog.push({
-    date: document.getElementById('dca-date').value || new Date().toISOString().split('T')[0],
-    amount, btcPrice, btcReceived
-  });
-  saveState();
-  renderDcaLog();
-  updateAll();
-}
-
-function renderDcaLog() {
-  const tbody = document.getElementById('dca-log-table');
-  tbody.innerHTML = '';
-  state.dcaLog.forEach((d, i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${d.date}</td><td>$${d.amount}</td><td>$${Math.round(d.btcPrice).toLocaleString()}</td>
-      <td>${d.btcReceived.toFixed(6)}</td>
-      <td><button class="danger" onclick="deleteDca(${i})" style="font-size:10px;padding:2px 6px">×</button></td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-function deleteDca(i) { state.dcaLog.splice(i, 1); saveState(); renderDcaLog(); updateAll(); }
 
 // ============================================================
 // STRATEGY.COM AUTO-FETCH (via CoinGecko Treasury API)
@@ -1862,7 +1733,6 @@ function updateAll() {
   updatePositions();
   updateRollDecisions();
   updateIncomeTracker();
-  updateBtcHoldings();
   updateAlerts();
 }
 
@@ -1908,7 +1778,6 @@ window.addEventListener('load', function() {
   // Convert canvas to img to avoid Chrome canvas compositing issues
   setTimeout(function() {
     syncCanvasToImg('scenarioChart');
-    syncCanvasToImg('mnavChart');
   }, 200);
 });
 </script>
