@@ -254,6 +254,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <div class="metric"><div class="metric-label">Unrealized P&L</div><div class="metric-value" id="port-btc-pl">--</div></div>
         <div class="metric"><div class="metric-label">Morpho Loan (4.3%)</div><div class="metric-value down" id="port-btc-loan">--</div></div>
         <div class="metric"><div class="metric-label">Morpho LTV</div><div class="metric-value" id="port-morpho-ltv">--</div></div>
+        <div class="metric"><div class="metric-label">BTC LTV (all 10)</div><div class="metric-value" id="port-btc-ltv-all">--</div></div>
       </div>
 
       <!-- Net Portfolio -->
@@ -880,6 +881,11 @@ function updatePortfolio() {
   const morphoLtv = btcCbVal > 0 ? (s.btcLoan / btcCbVal * 100) : 0;
   document.getElementById('port-morpho-ltv').textContent = morphoLtv.toFixed(1) + '%';
   document.getElementById('port-morpho-ltv').style.color = morphoLtv > 70 ? 'var(--red)' : morphoLtv > 55 ? 'var(--orange)' : 'var(--green)';
+
+  // BTC LTV including cold storage (loan / all 10 BTC)
+  const btcLtvAll = btcTotalVal > 0 ? (s.btcLoan / btcTotalVal * 100) : 0;
+  document.getElementById('port-btc-ltv-all').textContent = btcLtvAll.toFixed(1) + '%';
+  document.getElementById('port-btc-ltv-all').style.color = btcLtvAll > 50 ? 'var(--red)' : btcLtvAll > 35 ? 'var(--orange)' : 'var(--green)';
 
   // Morpho warning
   const warnEl = document.getElementById('morpho-warning');
