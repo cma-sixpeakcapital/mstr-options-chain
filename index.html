@@ -230,15 +230,38 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <span class="panel-title">Portfolio Value</span>
         <span class="panel-badge badge-live">LIVE</span>
       </div>
-      <div class="metric-grid">
-        <div class="metric"><div class="metric-label">MSTR Shares</div><div class="metric-value" id="port-mstr">--</div></div>
-        <div class="metric"><div class="metric-label">Cash + Premium</div><div class="metric-value" id="port-cash">--</div></div>
-        <div class="metric"><div class="metric-label">BTC Holdings</div><div class="metric-value" id="port-btc">--</div></div>
 
-        <div class="metric"><div class="metric-label">Margin</div><div class="metric-value down" id="port-margin">--</div></div>
-        <div class="metric"><div class="metric-label">BTC Loan</div><div class="metric-value down" id="port-btc-loan">--</div></div>
-        <div class="metric"><div class="metric-label">Total LTV</div><div class="metric-value" id="port-ltv">--</div></div>
-        <div class="metric"><div class="metric-label">Net Portfolio</div><div class="metric-value" id="port-total" style="color:var(--rust)">--</div></div>
+      <!-- Morpho LTV Warning -->
+      <div id="morpho-warning" style="display:none;background:rgba(239,68,68,0.15);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--red);font-weight:600"></div>
+
+      <!-- MSTR Position -->
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px">MSTR — Brokerage</div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">4,000 Shares</div><div class="metric-value" id="port-mstr">--</div></div>
+        <div class="metric"><div class="metric-label">Basis ($146.65/sh)</div><div class="metric-value" id="port-mstr-basis">--</div></div>
+        <div class="metric"><div class="metric-label">Unrealized P&L</div><div class="metric-value" id="port-mstr-pl">--</div></div>
+        <div class="metric"><div class="metric-label">Margin Loan</div><div class="metric-value down" id="port-margin">--</div></div>
+        <div class="metric"><div class="metric-label">Cash + Premium</div><div class="metric-value" id="port-cash">--</div></div>
+        <div class="metric"><div class="metric-label">MSTR Equity %</div><div class="metric-value" id="port-mstr-eq">--</div></div>
+      </div>
+
+      <!-- BTC Position -->
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border)">BTC — 10 Coins</div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Cold Storage (5 BTC)</div><div class="metric-value" id="port-btc-cold">--</div></div>
+        <div class="metric"><div class="metric-label">Coinbase (5 BTC)</div><div class="metric-value" id="port-btc-cb">--</div></div>
+        <div class="metric"><div class="metric-label">Basis ($<span id="port-btc-avg">--</span>/coin)</div><div class="metric-value" id="port-btc-basis">--</div></div>
+        <div class="metric"><div class="metric-label">Unrealized P&L</div><div class="metric-value" id="port-btc-pl">--</div></div>
+        <div class="metric"><div class="metric-label">Morpho Loan (4.3%)</div><div class="metric-value down" id="port-btc-loan">--</div></div>
+        <div class="metric"><div class="metric-label">Morpho LTV</div><div class="metric-value" id="port-morpho-ltv">--</div></div>
+      </div>
+
+      <!-- Net Portfolio -->
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border)">Net Portfolio</div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="port-assets">--</div></div>
+        <div class="metric"><div class="metric-label">Total Debt</div><div class="metric-value down" id="port-debt">--</div></div>
+        <div class="metric"><div class="metric-label">Net Value</div><div class="metric-value" id="port-total" style="color:var(--rust)">--</div></div>
       </div>
       <div style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
@@ -514,10 +537,11 @@ let state = {
   btcPrice: 0, mstrPrice: 0, btcChange24h: 0, mstrPrev: 0,
   liveOptions: {},
   settings: {
-    tradierToken: 'NmVn72M4E7bi6xCUiS95uKn88Jrs', shares: 4000, basis: 140,
+    tradierToken: 'NmVn72M4E7bi6xCUiS95uKn88Jrs', shares: 4000, mstrBasis: 146.65,
     cash: 80761.07, margin: 210817.29,
     btcLoan: 226933.38, btcLoanRate: 4.30,
     marginRates: { above100k: 4.50, mid: 4.75, below50k: 4.90 },
+    btcCold: 5, btcCoinbase: 5, btcBasis: 521189.07,
     btcHoldings: 10, stratBtc: 766970, stratShares: 345590, stratDebt: 8254,
     stratPref: 10336, stratCash: 2250, stratEV: 60338,
     stratMktCap: 44049, stratMnav: 1.13, stratIV: 75,
@@ -830,8 +854,7 @@ function updateTickers() {
   document.getElementById('prem-pct').textContent = pctTarget + '% of $' + (state.settings.target/1000) + 'K';
   document.getElementById('prem-pct').className = 'ticker-change ' + (pv.totalPremium > state.settings.target * 0.5 ? 'up' : 'neutral');
 
-  const totalDebt = state.settings.margin + (state.settings.btcLoan || 0);
-  document.getElementById('margin-bal').textContent = '$' + Math.round(totalDebt).toLocaleString();
+  document.getElementById('margin-bal').textContent = '$' + Math.round(state.settings.margin).toLocaleString();
   const eqPct = ((state.settings.shares * state.mstrPrice - state.settings.margin) / (state.settings.shares * state.mstrPrice) * 100);
   document.getElementById('margin-equity').textContent = eqPct.toFixed(1) + '% equity';
   document.getElementById('margin-equity').className = 'ticker-change ' + (eqPct > 55 ? 'up' : eqPct > 45 ? 'neutral' : 'down');
@@ -839,22 +862,68 @@ function updateTickers() {
 
 function updatePortfolio() {
   const pv = calcPortfolioValue();
+  const s = state.settings;
+
+  // ── MSTR Section ──
+  const mstrBasisTotal = s.shares * s.mstrBasis;
+  const mstrPL = pv.mstrVal - mstrBasisTotal;
   document.getElementById('port-mstr').textContent = '$' + Math.round(pv.mstrVal).toLocaleString();
+  document.getElementById('port-mstr-basis').textContent = '$' + Math.round(mstrBasisTotal).toLocaleString();
+  document.getElementById('port-mstr-pl').textContent = (mstrPL >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(mstrPL)).toLocaleString();
+  document.getElementById('port-mstr-pl').style.color = mstrPL >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('port-margin').textContent = '($' + Math.round(s.margin).toLocaleString() + ')';
   document.getElementById('port-cash').textContent = '$' + Math.round(pv.cashRemaining).toLocaleString();
-  document.getElementById('port-btc').textContent = '$' + Math.round(state.settings.btcHoldings * state.btcPrice).toLocaleString();
-  document.getElementById('port-margin').textContent = '($' + Math.round(pv.margin).toLocaleString() + ')';
-  document.getElementById('port-btc-loan').textContent = '($' + Math.round(pv.btcLoan).toLocaleString() + ')';
+  const mstrEq = pv.mstrVal > 0 ? ((pv.mstrVal - s.margin) / pv.mstrVal * 100) : 0;
+  document.getElementById('port-mstr-eq').textContent = mstrEq.toFixed(1) + '%';
+  document.getElementById('port-mstr-eq').style.color = mstrEq > 55 ? 'var(--green)' : mstrEq > 45 ? 'var(--orange)' : 'var(--red)';
+
+  // ── BTC Section ──
+  const btcColdVal = s.btcCold * state.btcPrice;
+  const btcCbVal = s.btcCoinbase * state.btcPrice;
+  const btcTotalVal = pv.btcVal;
+  const btcAvg = s.btcHoldings > 0 ? s.btcBasis / s.btcHoldings : 0;
+  const btcPL = btcTotalVal - s.btcBasis;
+  document.getElementById('port-btc-cold').textContent = '$' + Math.round(btcColdVal).toLocaleString();
+  document.getElementById('port-btc-cb').textContent = '$' + Math.round(btcCbVal).toLocaleString();
+  document.getElementById('port-btc-avg').textContent = Math.round(btcAvg).toLocaleString();
+  document.getElementById('port-btc-basis').textContent = '$' + Math.round(s.btcBasis).toLocaleString();
+  document.getElementById('port-btc-pl').textContent = (btcPL >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(btcPL)).toLocaleString();
+  document.getElementById('port-btc-pl').style.color = btcPL >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('port-btc-loan').textContent = '($' + Math.round(s.btcLoan).toLocaleString() + ')';
+
+  // Morpho LTV: loan / 5 BTC collateral on Coinbase
+  const morphoLtv = btcCbVal > 0 ? (s.btcLoan / btcCbVal * 100) : 0;
+  document.getElementById('port-morpho-ltv').textContent = morphoLtv.toFixed(1) + '%';
+  document.getElementById('port-morpho-ltv').style.color = morphoLtv > 70 ? 'var(--red)' : morphoLtv > 55 ? 'var(--orange)' : 'var(--green)';
+
+  // Morpho warning
+  const warnEl = document.getElementById('morpho-warning');
+  if (morphoLtv >= 70) {
+    warnEl.style.display = 'block';
+    warnEl.innerHTML = '\u26A0 MORPHO LTV AT ' + morphoLtv.toFixed(1) + '% — LIQUIDATION RISK. Add collateral or repay loan immediately.';
+    warnEl.style.animation = 'pulse 1s infinite';
+  } else if (morphoLtv >= 60) {
+    warnEl.style.display = 'block';
+    warnEl.innerHTML = '\u26A0 Morpho LTV at ' + morphoLtv.toFixed(1) + '% — approaching danger zone. Monitor closely.';
+    warnEl.style.color = 'var(--orange)';
+    warnEl.style.borderColor = 'var(--orange)';
+    warnEl.style.background = 'rgba(245,158,11,0.1)';
+    warnEl.style.animation = 'none';
+  } else {
+    warnEl.style.display = 'none';
+  }
+
+  // ── Net Portfolio ──
   const totalAssets = pv.mstrVal + pv.cashRemaining + pv.btcVal;
-  const ltv = totalAssets > 0 ? (pv.totalDebt / totalAssets * 100) : 0;
-  document.getElementById('port-ltv').textContent = ltv.toFixed(1) + '%';
-  document.getElementById('port-ltv').style.color = ltv > 50 ? 'var(--red)' : ltv > 35 ? 'var(--orange)' : 'var(--green)';
+  document.getElementById('port-assets').textContent = '$' + Math.round(totalAssets).toLocaleString();
+  document.getElementById('port-debt').textContent = '($' + Math.round(pv.totalDebt).toLocaleString() + ')';
   document.getElementById('port-total').textContent = '$' + Math.round(pv.net).toLocaleString();
 
   const gain = pv.net - 776699;
   const gainPct = (gain / 776699 * 100).toFixed(1);
   document.getElementById('port-gain-pct').textContent = (gain >= 0 ? '+' : '') + '$' + Math.round(gain).toLocaleString() + ' (' + gainPct + '%)';
   document.getElementById('port-gain-pct').style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
-  
+
   // Progress toward $1.8M exit
   const exitTarget = 1800000;
   const exitDist = exitTarget - pv.net;
