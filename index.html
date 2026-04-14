@@ -206,11 +206,6 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       <div class="ticker-value" id="iv-value">--</div>
       <div class="ticker-change neutral" id="iv-env">--</div>
     </div>
-    <div class="ticker prem">
-      <div class="ticker-label">Premium Collected</div>
-      <div class="ticker-value" id="prem-total">$0</div>
-      <div class="ticker-change neutral" id="prem-pct">0% of $250K</div>
-    </div>
     <div class="ticker margin">
       <div class="ticker-label">Margin Balance</div>
       <div class="ticker-value" id="margin-bal">--</div>
@@ -249,14 +244,6 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <div class="metric"><div class="metric-label">Margin Loan (4.5%)</div><div class="metric-value down" id="port-margin">--</div></div>
         <div class="metric"><div class="metric-label">Cash</div><div class="metric-value" id="port-cash">--</div></div>
         <div class="metric"><div class="metric-label">Brokerage LTV</div><div class="metric-value" id="port-brok-ltv">--</div></div>
-      </div>
-
-      <!-- STRC Dividend -->
-      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border)">STRC Dividend — 11.5% Annual</div>
-      <div class="metric-grid">
-        <div class="metric"><div class="metric-label">Monthly Dividend</div><div class="metric-value" id="port-strf-div-mo" style="color:var(--green)">--</div></div>
-        <div class="metric"><div class="metric-label">Annual Dividend</div><div class="metric-value" id="port-strf-div-yr">--</div></div>
-        <div class="metric"><div class="metric-label">Next Payment</div><div class="metric-value" id="port-strf-div-next">--</div></div>
       </div>
 
       <!-- BTC Position -->
@@ -309,6 +296,19 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       </div>
     </div>
 
+    <!-- STRC Dividend -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">STRC Dividend — 11.5% Annual</span>
+        <span class="panel-badge badge-live">MONTHLY</span>
+      </div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Monthly Dividend</div><div class="metric-value" id="port-strf-div-mo" style="color:var(--green)">--</div></div>
+        <div class="metric"><div class="metric-label">Annual Dividend</div><div class="metric-value" id="port-strf-div-yr">--</div></div>
+        <div class="metric"><div class="metric-label">Next Payment</div><div class="metric-value" id="port-strf-div-next">--</div></div>
+      </div>
+    </div>
+
     <!-- Panel 3: Active Positions -->
     <div class="panel full-width">
       <div class="panel-header">
@@ -336,31 +336,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       <div id="roll-decisions"></div>
     </div>
 
-    <!-- Panel 5: Premium Income Tracker -->
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">$250K Premium Target</span>
-        <span class="panel-badge badge-manual">MANUAL</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:baseline">
-        <div>
-          <div style="font-size:11px;color:var(--text3)">Collected</div>
-          <div style="font-family:var(--font-data);font-size:28px;font-weight:700;color:var(--green)" id="income-collected">$0</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:11px;color:var(--text3)">Remaining</div>
-          <div style="font-family:var(--font-data);font-size:28px;font-weight:700;color:var(--text2)" id="income-remaining">$250,000</div>
-        </div>
-      </div>
-      <div class="progress-bar" style="height:10px;margin:12px 0"><div class="progress-fill" id="income-progress" style="width:0%;background:linear-gradient(90deg,var(--green),var(--rust))"></div></div>
-      <div class="metric-grid" style="margin-top:8px">
-        <div class="metric"><div class="metric-label">Weekly Avg</div><div class="metric-value" id="income-weekly">--</div></div>
-        <div class="metric"><div class="metric-label">Weeks Active</div><div class="metric-value" id="income-weeks">--</div></div>
-        <div class="metric"><div class="metric-label">Pace to $250K</div><div class="metric-value" id="income-pace">--</div></div>
-      </div>
-    </div>
-
-    <!-- Panel 6: Scenario Projections -->
+    <!-- Panel 5: Scenario Projections -->
     <div class="panel full-width">
       <div class="panel-header">
         <span class="panel-title">Scenario Projection vs Actuals — Apr 2026 → Nov 2027</span>
@@ -868,14 +844,10 @@ function updateTickers() {
   else { ivEnv.textContent = 'LOW'; ivEnv.className = 'ticker-change down'; }
 
   const pv = calcPortfolioValue();
-  document.getElementById('prem-total').textContent = '$' + Math.round(pv.totalPremium).toLocaleString();
-  const pctTarget = (pv.totalPremium / state.settings.target * 100).toFixed(1);
-  document.getElementById('prem-pct').textContent = pctTarget + '% of $' + (state.settings.target/1000) + 'K';
-  document.getElementById('prem-pct').className = 'ticker-change ' + (pv.totalPremium > state.settings.target * 0.5 ? 'up' : 'neutral');
-
   document.getElementById('margin-bal').textContent = '$' + Math.round(state.settings.margin).toLocaleString();
   const tickerPv = calcPortfolioValue();
-  const tickerEqPct = tickerPv.brokerageAssets > 0 ? ((tickerPv.brokerageAssets - state.settings.margin) / tickerPv.brokerageAssets * 100) : 0;
+  const tickerSecurities = tickerPv.mstrVal + tickerPv.ibitVal + tickerPv.strcVal;
+  const tickerEqPct = tickerSecurities > 0 ? ((tickerSecurities - state.settings.margin) / tickerSecurities * 100) : 0;
   document.getElementById('margin-equity').textContent = tickerEqPct.toFixed(1) + '% equity';
   document.getElementById('margin-equity').className = 'ticker-change ' + (tickerEqPct > 55 ? 'up' : tickerEqPct > 45 ? 'neutral' : 'down');
 }
@@ -1151,33 +1123,6 @@ function updateRollDecisions() {
     container.innerHTML = '<div class="alert alert-info"><span class="alert-icon">ℹ</span>No positions loaded. Add your covered call positions to see roll decisions.</div>';
   }
 }
-
-function updateIncomeTracker() {
-  const totalPremium = state.rolls.reduce((sum, r) => sum + (r.credit * r.contracts * 100), 0);
-  const target = state.settings.target;
-  const remaining = target - totalPremium;
-  const pct = Math.min(100, totalPremium / target * 100);
-
-  document.getElementById('income-collected').textContent = '$' + Math.round(totalPremium).toLocaleString();
-  document.getElementById('income-remaining').textContent = '$' + Math.round(Math.max(0, remaining)).toLocaleString();
-  document.getElementById('income-progress').style.width = pct + '%';
-
-  const weeks = state.rolls.length > 0 ?
-    Math.max(1, Math.ceil((new Date() - new Date(state.rolls[0].date)) / (7 * 86400000))) : 0;
-  const weeklyAvg = weeks > 0 ? totalPremium / weeks : 0;
-
-  document.getElementById('income-weekly').textContent = weeks > 0 ? '$' + Math.round(weeklyAvg).toLocaleString() : '--';
-  document.getElementById('income-weeks').textContent = weeks > 0 ? weeks.toString() : '0';
-
-  if (weeklyAvg > 0) {
-    const weeksToTarget = remaining / weeklyAvg;
-    const targetDate = new Date(Date.now() + weeksToTarget * 7 * 86400000);
-    document.getElementById('income-pace').textContent = targetDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  } else {
-    document.getElementById('income-pace').textContent = '--';
-  }
-}
-
 
 function updateAlerts() {
   const container = document.getElementById('alerts-container');
@@ -1865,7 +1810,6 @@ function updateAll() {
   updateMarginSafety();
   updatePositions();
   updateRollDecisions();
-  updateIncomeTracker();
   updateAlerts();
 }
 
