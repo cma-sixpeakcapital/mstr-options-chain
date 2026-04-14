@@ -219,15 +219,36 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
   <!-- Dashboard Grid -->
   <div class="dashboard">
 
+    <!-- Net Portfolio -->
+    <div class="panel full-width">
+      <div class="panel-header">
+        <span class="panel-title">Net Portfolio</span>
+        <span class="panel-badge badge-live">LIVE</span>
+      </div>
+      <div id="morpho-warning" style="display:none;background:rgba(239,68,68,0.15);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--red);font-weight:600"></div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="port-assets">--</div></div>
+        <div class="metric"><div class="metric-label">Total Debt</div><div class="metric-value down" id="port-debt">--</div></div>
+        <div class="metric"><div class="metric-label">Combined LTV</div><div class="metric-value" id="port-combined-ltv">--</div></div>
+        <div class="metric"><div class="metric-label">Net Value</div><div class="metric-value" id="port-total" style="color:var(--rust);font-size:24px">--</div></div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
+          <span>Starting: $670,038 (Jan 1, 2023)</span><span id="port-gain-pct">--</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="port-progress" style="width:0%;background:var(--rust)"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px">
+          <span>Exit trigger: $1,800,000</span><span id="port-exit-dist">--</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Panel 1: Portfolio Value -->
     <div class="panel">
       <div class="panel-header">
         <span class="panel-title">Portfolio Value</span>
         <span class="panel-badge badge-live">LIVE</span>
       </div>
-
-      <!-- Morpho LTV Warning -->
-      <div id="morpho-warning" style="display:none;background:rgba(239,68,68,0.15);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--red);font-weight:600"></div>
 
       <!-- Brokerage Account -->
       <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px">Brokerage Account</div>
@@ -258,23 +279,6 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <div class="metric"><div class="metric-label">BTC LTV (all 10)</div><div class="metric-value" id="port-btc-ltv-all">--</div></div>
       </div>
 
-      <!-- Net Portfolio -->
-      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border)">Net Portfolio</div>
-      <div class="metric-grid">
-        <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="port-assets">--</div></div>
-        <div class="metric"><div class="metric-label">Total Debt</div><div class="metric-value down" id="port-debt">--</div></div>
-        <div class="metric"><div class="metric-label">Combined LTV</div><div class="metric-value" id="port-combined-ltv">--</div></div>
-        <div class="metric"><div class="metric-label">Net Value</div><div class="metric-value" id="port-total" style="color:var(--rust)">--</div></div>
-      </div>
-      <div style="margin-top:12px">
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">
-          <span>Starting: $670,038 (Jan 1, 2023)</span><span id="port-gain-pct">--</span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" id="port-progress" style="width:0%;background:var(--rust)"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px">
-          <span>Exit trigger: $1,800,000</span><span id="port-exit-dist">--</span>
-        </div>
-      </div>
     </div>
 
     <!-- Panel 2: Margin Safety -->
