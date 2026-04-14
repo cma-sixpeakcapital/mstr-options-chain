@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MSTR Options Desk — Mission Control</title>
+<title>BTC Investment Portfolio</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -173,8 +173,8 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
 <div class="app" style="padding-top:19px">
   <div class="header">
     <div>
-      <h1>MSTR OPTIONS DESK</h1>
-      <div class="subtitle">Mission Control — Covered Call Strategy Dashboard — Started January 1, 2026</div>
+      <h1>BTC INVESTMENT PORTFOLIO</h1>
+      <div class="subtitle">Portfolio Dashboard — Started January 1, 2023</div>
     </div>
     <div class="header-right">
       <span class="header-time" id="clock"></span>
@@ -234,15 +234,29 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       <!-- Morpho LTV Warning -->
       <div id="morpho-warning" style="display:none;background:rgba(239,68,68,0.15);border:1px solid var(--red);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--red);font-weight:600"></div>
 
-      <!-- MSTR Position -->
-      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px">MSTR — Brokerage</div>
+      <!-- Brokerage Account -->
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px">Brokerage Account</div>
       <div class="metric-grid">
-        <div class="metric"><div class="metric-label">4,000 Shares</div><div class="metric-value" id="port-mstr">--</div></div>
-        <div class="metric"><div class="metric-label">Basis ($146.65/sh)</div><div class="metric-value" id="port-mstr-basis">--</div></div>
-        <div class="metric"><div class="metric-label">Unrealized P&L</div><div class="metric-value" id="port-mstr-pl">--</div></div>
-        <div class="metric"><div class="metric-label">Margin Loan</div><div class="metric-value down" id="port-margin">--</div></div>
-        <div class="metric"><div class="metric-label">Cash + Premium</div><div class="metric-value" id="port-cash">--</div></div>
-        <div class="metric"><div class="metric-label">MSTR Equity %</div><div class="metric-value" id="port-mstr-eq">--</div></div>
+        <div class="metric"><div class="metric-label">MSTR (1,200 sh)</div><div class="metric-value" id="port-mstr">--</div></div>
+        <div class="metric"><div class="metric-label">MSTR Basis ($146.65/sh)</div><div class="metric-value" id="port-mstr-basis">--</div></div>
+        <div class="metric"><div class="metric-label">MSTR P&L</div><div class="metric-value" id="port-mstr-pl">--</div></div>
+        <div class="metric"><div class="metric-label">IBIT (7,500 sh)</div><div class="metric-value" id="port-ibit">--</div></div>
+        <div class="metric"><div class="metric-label">IBIT Basis ($42.38/sh)</div><div class="metric-value" id="port-ibit-basis">--</div></div>
+        <div class="metric"><div class="metric-label">IBIT P&L</div><div class="metric-value" id="port-ibit-pl">--</div></div>
+        <div class="metric"><div class="metric-label">STRF (1,100 sh)</div><div class="metric-value" id="port-strf">--</div></div>
+        <div class="metric"><div class="metric-label">STRF Basis ($100.01/sh)</div><div class="metric-value" id="port-strf-basis">--</div></div>
+        <div class="metric"><div class="metric-label">STRF P&L</div><div class="metric-value" id="port-strf-pl">--</div></div>
+        <div class="metric"><div class="metric-label">Margin Loan (4.5%)</div><div class="metric-value down" id="port-margin">--</div></div>
+        <div class="metric"><div class="metric-label">Cash</div><div class="metric-value" id="port-cash">--</div></div>
+        <div class="metric"><div class="metric-label">Brokerage LTV</div><div class="metric-value" id="port-brok-ltv">--</div></div>
+      </div>
+
+      <!-- STRF Dividend -->
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:14px;margin-bottom:6px;padding-top:10px;border-top:1px solid var(--border)">STRF Dividend — 11.5% Annual</div>
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Monthly Dividend</div><div class="metric-value" id="port-strf-div-mo" style="color:var(--green)">--</div></div>
+        <div class="metric"><div class="metric-label">Annual Dividend</div><div class="metric-value" id="port-strf-div-yr">--</div></div>
+        <div class="metric"><div class="metric-label">Next Payment</div><div class="metric-value" id="port-strf-div-next">--</div></div>
       </div>
 
       <!-- BTC Position -->
@@ -262,6 +276,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       <div class="metric-grid">
         <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="port-assets">--</div></div>
         <div class="metric"><div class="metric-label">Total Debt</div><div class="metric-value down" id="port-debt">--</div></div>
+        <div class="metric"><div class="metric-label">Combined LTV</div><div class="metric-value" id="port-combined-ltv">--</div></div>
         <div class="metric"><div class="metric-label">Net Value</div><div class="metric-value" id="port-total" style="color:var(--rust)">--</div></div>
       </div>
       <div style="margin-top:12px">
@@ -435,48 +450,81 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       <label>Tradier API Token</label>
       <input type="text" id="tradier-token" placeholder="Enter your Tradier API token">
     </div>
+    <div style="margin-bottom:12px;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--btc);font-family:var(--font-data);text-transform:uppercase;letter-spacing:1px">Brokerage Account</span>
+    </div>
     <div class="input-group" style="margin-bottom:12px">
       <label>MSTR Shares</label>
-      <input type="number" id="setting-shares" value="4000">
+      <input type="number" id="setting-shares" value="1200">
     </div>
     <div class="input-group" style="margin-bottom:12px">
-      <label>Cost Basis ($/share)</label>
-      <input type="number" id="setting-basis" value="140">
+      <label>MSTR Basis ($)</label>
+      <input type="number" id="setting-mstr-basis" value="175981.17" step="0.01">
     </div>
     <div class="input-group" style="margin-bottom:12px">
-      <label>Cash on Hand ($)</label>
-      <input type="number" id="setting-cash" value="225000">
+      <label>IBIT Shares</label>
+      <input type="number" id="setting-ibit-shares" value="7500">
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>IBIT Basis ($)</label>
+      <input type="number" id="setting-ibit-basis" value="317887.57" step="0.01">
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>STRF Shares</label>
+      <input type="number" id="setting-strf-shares" value="1100">
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>STRF Basis ($)</label>
+      <input type="number" id="setting-strf-basis" value="110011" step="0.01">
     </div>
     <div class="input-group" style="margin-bottom:12px">
       <label>Margin Balance ($)</label>
-      <input type="number" id="setting-margin" value="223000">
+      <input type="number" id="setting-margin" value="271752">
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>Cash on Hand ($)</label>
+      <input type="number" id="setting-cash" value="80761.07" step="0.01">
+    </div>
+    <div style="margin-bottom:12px;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);margin-top:16px">
+      <span style="font-size:11px;color:var(--btc);font-family:var(--font-data);text-transform:uppercase;letter-spacing:1px">BTC Holdings</span>
     </div>
     <div class="input-group" style="margin-bottom:12px">
       <label>BTC Cold Storage</label>
-      <input type="number" id="setting-btc" value="5.5" step="0.001">
-    </div>
-    <div style="margin-bottom:12px;padding:10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:11px;color:var(--rust);font-family:var(--font-data);text-transform:uppercase;letter-spacing:1px">Strategy.com Data (Auto-Fetch)</span>
-        <span id="strat-fetch-status" style="font-size:10px;font-family:var(--font-data);color:var(--text3)">Not fetched</span>
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin-bottom:8px">BTC holdings auto-pulled from CoinGecko Treasury API. Manual overrides below.</div>
-      <button onclick="fetchStrategyData().then(()=>{ document.getElementById('setting-strat-btc').value=state.settings.stratBtc; })" style="font-size:10px;margin-bottom:8px">Refresh Strategy Data Now</button>
+      <input type="number" id="setting-btc-cold" value="5" step="0.001">
     </div>
     <div class="input-group" style="margin-bottom:12px">
-      <label>Strategy BTC Holdings (auto-updated)</label>
-      <input type="number" id="setting-strat-btc" value="762099">
+      <label>BTC Coinbase Collateral</label>
+      <input type="number" id="setting-btc-coinbase" value="5" step="0.001">
     </div>
     <div class="input-group" style="margin-bottom:12px">
-      <label>Strategy Shares Outstanding (basic, thousands)</label>
-      <input type="number" id="setting-strat-shares" value="345084">
+      <label>BTC Basis ($)</label>
+      <input type="number" id="setting-btc-basis" value="521189.07" step="0.01">
     </div>
     <div class="input-group" style="margin-bottom:12px">
-      <label>Strategy Debt + Prefs ($M)</label>
-      <input type="number" id="setting-strat-debt" value="18254">
+      <label>Morpho Loan ($)</label>
+      <input type="number" id="setting-btc-loan" value="226933.38" step="0.01">
     </div>
     <div class="input-group" style="margin-bottom:12px">
-      <label>Premium Income Target ($)</label>
+      <label>Morpho Loan Rate (%)</label>
+      <input type="number" id="setting-btc-loan-rate" value="4.30" step="0.01">
+    </div>
+    <div style="margin-bottom:12px;padding:8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border);margin-top:16px">
+      <span style="font-size:11px;color:var(--btc);font-family:var(--font-data);text-transform:uppercase;letter-spacing:1px">Strategy.com Data</span>
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>Strategy BTC Holdings</label>
+      <input type="number" id="setting-strat-btc" value="766970">
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>Strategy Shares Outstanding (thousands)</label>
+      <input type="number" id="setting-strat-shares" value="345590">
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>Strategy Debt ($M)</label>
+      <input type="number" id="setting-strat-debt" value="8254">
+    </div>
+    <div class="input-group" style="margin-bottom:12px">
+      <label>Net Portfolio Target ($)</label>
       <input type="number" id="setting-target" value="250000">
     </div>
     <div style="display:flex;gap:8px;margin-top:16px">
@@ -535,13 +583,15 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
 // STATE
 // ============================================================
 let state = {
-  btcPrice: 0, mstrPrice: 0, btcChange24h: 0, mstrPrev: 0,
+  btcPrice: 0, mstrPrice: 0, ibitPrice: 0, strcPrice: 0, btcChange24h: 0, mstrPrev: 0,
   liveOptions: {},
   settings: {
-    tradierToken: 'NmVn72M4E7bi6xCUiS95uKn88Jrs', shares: 4000, mstrBasis: 146.65,
-    cash: 80761.07, margin: 210817.29,
+    tradierToken: 'NmVn72M4E7bi6xCUiS95uKn88Jrs',
+    shares: 1200, mstrBasis: 175981.17,
+    ibitShares: 7500, ibitBasis: 317887.57,
+    strcShares: 1100, strcBasis: 110011, strcDivRate: 11.50, strcPar: 100,
+    cash: 80761.07, margin: 271752,
     btcLoan: 226933.38, btcLoanRate: 4.30,
-    marginRates: { above100k: 4.50, mid: 4.75, below50k: 4.90 },
     btcCold: 5, btcCoinbase: 5, btcBasis: 521189.07,
     btcHoldings: 10, stratBtc: 766970, stratShares: 345590, stratDebt: 8254,
     stratPref: 10336, stratCash: 2250, stratEV: 60338,
@@ -549,35 +599,10 @@ let state = {
     target: 250000
   },
   positions: [
-    { tranche: 'T1', strike: 160, expiry: '2026-05-15', contracts: 8, premium: 2.00, openDelta: 0.16, currentPrice: 2.00 },
-    { tranche: 'T2', strike: 155, expiry: '2026-05-15', contracts: 8, premium: 2.53, openDelta: 0.20, currentPrice: 2.53 },
-    { tranche: 'T3', strike: 150, expiry: '2026-05-15', contracts: 8, premium: 3.30, openDelta: 0.25, currentPrice: 3.30 },
-    { tranche: 'T4', strike: 145, expiry: '2026-05-15', contracts: 8, premium: 4.18, openDelta: 0.31, currentPrice: 4.18 },
-    { tranche: 'T5', strike: 140, expiry: '2026-05-15', contracts: 8, premium: 5.38, openDelta: 0.37, currentPrice: 5.38 }
+    { tranche: 'T1', strike: 160, expiry: '2026-05-15', contracts: 8, premium: 2.06, openDelta: 0.16, currentPrice: 3.88 },
+    { tranche: 'T2', strike: 150, expiry: '2026-05-15', contracts: 4, premium: 3.37, openDelta: 0.25, currentPrice: 6.45 }
   ],
-  rolls: [
-    { date: '2026-03-17', tranche: 'T1', credit: 1.22, contracts: 8, notes: 'STO Apr24 $210 (10Δ ladder open)' },
-    { date: '2026-03-17', tranche: 'T2', credit: 1.38, contracts: 8, notes: 'STO Apr24 $205' },
-    { date: '2026-03-17', tranche: 'T3', credit: 2.12, contracts: 8, notes: 'STO Apr24 $195' },
-    { date: '2026-03-17', tranche: 'T4', credit: 2.60, contracts: 8, notes: 'STO Apr24 $190' },
-    { date: '2026-03-17', tranche: 'T5', credit: 3.26, contracts: 8, notes: 'STO Apr24 $185' },
-    { date: '2026-03-17', tranche: 'ALL', credit: 0.09, contracts: 40, notes: 'Prior $160 CC closed +$700' },
-    { date: '2026-03-24', tranche: 'T1', credit: 1.79, contracts: 8, notes: 'Roll to May1 $180 — credit $1.79' },
-    { date: '2026-03-24', tranche: 'T2', credit: 2.28, contracts: 8, notes: 'Roll to May1 $175 — credit $2.28' },
-    { date: '2026-03-24', tranche: 'T3', credit: 2.88, contracts: 8, notes: 'Roll to May1 $170 — credit $2.88' },
-    { date: '2026-03-24', tranche: 'T4', credit: 3.60, contracts: 8, notes: 'Roll to May1 $165 — credit $3.60' },
-    { date: '2026-03-24', tranche: 'T5', credit: 4.43, contracts: 8, notes: 'Roll to May1 $160 — credit $4.43' },
-    { date: '2026-03-31', tranche: 'T1', credit: 1.01, contracts: 8, notes: 'Roll down+out $180→$165 May08 — credit $1.01' },
-    { date: '2026-03-31', tranche: 'T2', credit: 1.32, contracts: 8, notes: 'Roll down+out $175→$160 May08 — credit $1.32' },
-    { date: '2026-03-31', tranche: 'T3', credit: 1.77, contracts: 8, notes: 'Roll down+out $170→$155 May08 — credit $1.77' },
-    { date: '2026-03-31', tranche: 'T4', credit: 2.25, contracts: 8, notes: 'Roll down+out $165→$150 May08 — credit $2.25' },
-    { date: '2026-03-31', tranche: 'T5', credit: 2.82, contracts: 8, notes: 'Roll down+out $160→$145 May08 — credit $2.82' },
-    { date: '2026-04-07', tranche: 'T1', credit: 0.89, contracts: 8, notes: 'Roll down+out $165→$160 May15 — credit $0.89' },
-    { date: '2026-04-07', tranche: 'T2', credit: 1.15, contracts: 8, notes: 'Roll down+out $160→$155 May15 — credit $1.15' },
-    { date: '2026-04-07', tranche: 'T3', credit: 1.41, contracts: 8, notes: 'Roll down+out $155→$150 May15 — credit $1.41' },
-    { date: '2026-04-07', tranche: 'T4', credit: 1.60, contracts: 8, notes: 'Roll down+out $150→$145 May15 — credit $1.60' },
-    { date: '2026-04-07', tranche: 'T5', credit: 1.97, contracts: 8, notes: 'Roll down+out $145→$140 May15 — credit $1.97' }
-  ],
+  rolls: [],
   dcaLog: [],
   mnavHistory: [
     { date: '2026-03-17', value: 1.21 },
@@ -599,10 +624,7 @@ let state = {
     { date: '2026-04-06', value: 1.13 }
   ],
   portfolioHistory: [
-    { date: '2026-03-17', value: 670038 },
-    { date: '2026-03-21', value: 860000 },
-    { date: '2026-03-28', value: 848000 },
-    { date: '2026-03-29', value: 843000 }
+    { date: '2023-01-01', value: 670038 }
   ]
 };
 
@@ -649,24 +671,30 @@ async function fetchBtcPrice() {
   return false;
 }
 
-async function fetchMstrPrice() {
+async function fetchEquityPrices() {
   if (!state.settings.tradierToken) {
     const ratio = 126 / 66000;
     state.mstrPrice = Math.round(state.btcPrice * ratio * 100) / 100;
     return true;
   }
   try {
-    const res = await fetch('https://api.tradier.com/v1/markets/quotes?symbols=MSTR', {
+    const res = await fetch('https://api.tradier.com/v1/markets/quotes?symbols=MSTR,IBIT,STRF', {
       headers: { 'Authorization': 'Bearer ' + state.settings.tradierToken, 'Accept': 'application/json' }
     });
     const data = await res.json();
     if (data.quotes && data.quotes.quote) {
-      state.mstrPrev = data.quotes.quote.prevclose;
-      state.mstrPrice = data.quotes.quote.last || data.quotes.quote.close;
+      const quotes = Array.isArray(data.quotes.quote) ? data.quotes.quote : [data.quotes.quote];
+      quotes.forEach(q => {
+        const sym = q.symbol;
+        const price = q.last || q.close;
+        if (sym === 'MSTR') { state.mstrPrev = q.prevclose; state.mstrPrice = price; }
+        else if (sym === 'IBIT') { state.ibitPrice = price; }
+        else if (sym === 'STRF') { state.strcPrice = price; }
+      });
     }
     return true;
   } catch(e) {
-    console.error('MSTR fetch failed', e);
+    console.error('Equity fetch failed', e);
     const ratio = 126 / 66000;
     state.mstrPrice = Math.round(state.btcPrice * ratio * 100) / 100;
     return false;
@@ -785,6 +813,8 @@ function estimateDelta(strike, dte, iv) {
 function calcPortfolioValue() {
   const s = state.settings;
   const mstrVal = s.shares * state.mstrPrice;
+  const ibitVal = s.ibitShares * state.ibitPrice;
+  const strcVal = s.strcShares * state.strcPrice;
   const totalPremium = state.rolls.reduce((sum, r) => sum + (r.credit * r.contracts * 100), 0);
   const dcaTotal = state.dcaLog.reduce((sum, d) => sum + d.btcReceived, 0);
   const dcaSpent = state.dcaLog.reduce((sum, d) => sum + d.amount, 0);
@@ -792,8 +822,11 @@ function calcPortfolioValue() {
   const cashRemaining = s.cash + totalPremium - dcaSpent;
   const btcLoan = s.btcLoan || 0;
   const totalDebt = s.margin + btcLoan;
-  return { mstrVal, cashRemaining, btcVal, margin: s.margin, btcLoan, totalDebt, totalPremium, dcaTotal, dcaSpent,
-    net: mstrVal + cashRemaining + btcVal - totalDebt };
+  const brokerageAssets = mstrVal + ibitVal + strcVal + cashRemaining;
+  const totalAssets = brokerageAssets + btcVal;
+  return { mstrVal, ibitVal, strcVal, cashRemaining, btcVal, margin: s.margin, btcLoan, totalDebt, totalPremium,
+    brokerageAssets, totalAssets, dcaTotal, dcaSpent,
+    net: totalAssets - totalDebt };
 }
 
 function btcToBreachStrike(strike) {
@@ -841,27 +874,53 @@ function updateTickers() {
   document.getElementById('prem-pct').className = 'ticker-change ' + (pv.totalPremium > state.settings.target * 0.5 ? 'up' : 'neutral');
 
   document.getElementById('margin-bal').textContent = '$' + Math.round(state.settings.margin).toLocaleString();
-  const eqPct = ((state.settings.shares * state.mstrPrice - state.settings.margin) / (state.settings.shares * state.mstrPrice) * 100);
-  document.getElementById('margin-equity').textContent = eqPct.toFixed(1) + '% equity';
-  document.getElementById('margin-equity').className = 'ticker-change ' + (eqPct > 55 ? 'up' : eqPct > 45 ? 'neutral' : 'down');
+  const tickerPv = calcPortfolioValue();
+  const tickerEqPct = tickerPv.brokerageAssets > 0 ? ((tickerPv.brokerageAssets - state.settings.margin) / tickerPv.brokerageAssets * 100) : 0;
+  document.getElementById('margin-equity').textContent = tickerEqPct.toFixed(1) + '% equity';
+  document.getElementById('margin-equity').className = 'ticker-change ' + (tickerEqPct > 55 ? 'up' : tickerEqPct > 45 ? 'neutral' : 'down');
 }
 
 function updatePortfolio() {
   const pv = calcPortfolioValue();
   const s = state.settings;
 
-  // ── MSTR Section ──
-  const mstrBasisTotal = s.shares * s.mstrBasis;
-  const mstrPL = pv.mstrVal - mstrBasisTotal;
+  // ── Brokerage: MSTR ──
+  const mstrPL = pv.mstrVal - s.mstrBasis;
   document.getElementById('port-mstr').textContent = '$' + Math.round(pv.mstrVal).toLocaleString();
-  document.getElementById('port-mstr-basis').textContent = '$' + Math.round(mstrBasisTotal).toLocaleString();
+  document.getElementById('port-mstr-basis').textContent = '$' + Math.round(s.mstrBasis).toLocaleString();
   document.getElementById('port-mstr-pl').textContent = (mstrPL >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(mstrPL)).toLocaleString();
   document.getElementById('port-mstr-pl').style.color = mstrPL >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // ── Brokerage: IBIT ──
+  const ibitPL = pv.ibitVal - s.ibitBasis;
+  document.getElementById('port-ibit').textContent = '$' + Math.round(pv.ibitVal).toLocaleString();
+  document.getElementById('port-ibit-basis').textContent = '$' + Math.round(s.ibitBasis).toLocaleString();
+  document.getElementById('port-ibit-pl').textContent = (ibitPL >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(ibitPL)).toLocaleString();
+  document.getElementById('port-ibit-pl').style.color = ibitPL >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // ── Brokerage: STRF ──
+  const strfPL = pv.strcVal - s.strcBasis;
+  document.getElementById('port-strf').textContent = '$' + Math.round(pv.strcVal).toLocaleString();
+  document.getElementById('port-strf-basis').textContent = '$' + Math.round(s.strcBasis).toLocaleString();
+  document.getElementById('port-strf-pl').textContent = (strfPL >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(strfPL)).toLocaleString();
+  document.getElementById('port-strf-pl').style.color = strfPL >= 0 ? 'var(--green)' : 'var(--red)';
+
+  // ── Brokerage: Margin, Cash, LTV ──
   document.getElementById('port-margin').textContent = '($' + Math.round(s.margin).toLocaleString() + ')';
   document.getElementById('port-cash').textContent = '$' + Math.round(pv.cashRemaining).toLocaleString();
-  const mstrEq = pv.mstrVal > 0 ? ((pv.mstrVal - s.margin) / pv.mstrVal * 100) : 0;
-  document.getElementById('port-mstr-eq').textContent = mstrEq.toFixed(1) + '%';
-  document.getElementById('port-mstr-eq').style.color = mstrEq > 55 ? 'var(--green)' : mstrEq > 45 ? 'var(--orange)' : 'var(--red)';
+  const brokLtv = pv.brokerageAssets > 0 ? (s.margin / pv.brokerageAssets * 100) : 0;
+  document.getElementById('port-brok-ltv').textContent = brokLtv.toFixed(1) + '%';
+  document.getElementById('port-brok-ltv').style.color = brokLtv > 50 ? 'var(--red)' : brokLtv > 35 ? 'var(--orange)' : 'var(--green)';
+
+  // ── STRF Dividend ──
+  const annualDiv = s.strcShares * s.strcDivRate;
+  const monthlyDiv = annualDiv / 12;
+  document.getElementById('port-strf-div-mo').textContent = '$' + Math.round(monthlyDiv).toLocaleString();
+  document.getElementById('port-strf-div-yr').textContent = '$' + Math.round(annualDiv).toLocaleString();
+  const now = new Date();
+  let nextPay = new Date(now.getFullYear(), now.getMonth(), 30);
+  if (nextPay <= now) nextPay = new Date(now.getFullYear(), now.getMonth() + 1, 30);
+  document.getElementById('port-strf-div-next').textContent = nextPay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   // ── BTC Section ──
   const btcColdVal = s.btcCold * state.btcPrice;
@@ -905,9 +964,11 @@ function updatePortfolio() {
   }
 
   // ── Net Portfolio ──
-  const totalAssets = pv.mstrVal + pv.cashRemaining + pv.btcVal;
-  document.getElementById('port-assets').textContent = '$' + Math.round(totalAssets).toLocaleString();
+  document.getElementById('port-assets').textContent = '$' + Math.round(pv.totalAssets).toLocaleString();
   document.getElementById('port-debt').textContent = '($' + Math.round(pv.totalDebt).toLocaleString() + ')';
+  const combinedLtv = pv.totalAssets > 0 ? (pv.totalDebt / pv.totalAssets * 100) : 0;
+  document.getElementById('port-combined-ltv').textContent = combinedLtv.toFixed(1) + '%';
+  document.getElementById('port-combined-ltv').style.color = combinedLtv > 40 ? 'var(--red)' : combinedLtv > 30 ? 'var(--orange)' : 'var(--green)';
   document.getElementById('port-total').textContent = '$' + Math.round(pv.net).toLocaleString();
 
   const gain = pv.net - 670038;
@@ -926,12 +987,14 @@ function updatePortfolio() {
 
 function updateMarginSafety() {
   const s = state.settings;
-  const posVal = s.shares * state.mstrPrice;
+  const pv = calcPortfolioValue();
+  const posVal = pv.brokerageAssets;
   const equity = posVal - s.margin;
   const eqPct = posVal > 0 ? equity / posVal * 100 : 0;
   const maintenance = posVal * 0.4;
   const excess = equity - maintenance;
-  const callPrice = s.margin / (s.shares * 0.6);
+  const nonMstrAssets = pv.ibitVal + pv.strcVal + pv.cashRemaining;
+  const callPrice = s.shares > 0 ? (s.margin * 1.667 - nonMstrAssets) / s.shares : 0;
   const interest = calcMarginInterest();
 
   document.getElementById('margin-eq-pct').textContent = eqPct.toFixed(1) + '%';
@@ -1110,18 +1173,19 @@ function updateAlerts() {
   container.innerHTML = '';
   const mnav = calcGrossMnav();
   const s = state.settings;
-  const posVal = s.shares * state.mstrPrice;
+  const alertPv = calcPortfolioValue();
+  const posVal = alertPv.brokerageAssets;
   const equity = posVal - s.margin;
-  const eqPct = equity / posVal;
+  const eqPct = posVal > 0 ? equity / posVal : 0;
 
   if (eqPct < 0.45) {
-    container.innerHTML += `<div class="alert alert-danger"><span class="alert-icon">✕</span>MARGIN WARNING: Equity at ${(eqPct*100).toFixed(1)}% — approaching maintenance. Deposit cash or reduce position.</div>`;
+    container.innerHTML += `<div class="alert alert-danger"><span class="alert-icon">✕</span>MARGIN WARNING: Brokerage equity at ${(eqPct*100).toFixed(1)}% — approaching maintenance.</div>`;
   }
   if (mnav > 1.40) {
-    container.innerHTML += `<div class="alert alert-warn"><span class="alert-icon">⚠</span>mNAV at ${mnav.toFixed(2)}x — euphoric territory. All strikes at elevated assignment risk.</div>`;
+    container.innerHTML += `<div class="alert alert-warn"><span class="alert-icon">⚠</span>mNAV at ${mnav.toFixed(2)}x — euphoric territory. Covered calls at elevated assignment risk.</div>`;
   }
   if (state.btcPrice > 90000) {
-    container.innerHTML += `<div class="alert alert-warn"><span class="alert-icon">⚠</span>BTC above $90K — approaching strike zone. Monitor T5 delta closely.</div>`;
+    container.innerHTML += `<div class="alert alert-warn"><span class="alert-icon">⚠</span>BTC above $90K — monitor covered call positions closely.</div>`;
   }
 }
 
@@ -1259,10 +1323,18 @@ function openSettings() {
   const s = state.settings;
   document.getElementById('tradier-token').value = s.tradierToken || '';
   document.getElementById('setting-shares').value = s.shares;
-  document.getElementById('setting-basis').value = s.basis;
-  document.getElementById('setting-cash').value = s.cash;
+  document.getElementById('setting-mstr-basis').value = s.mstrBasis;
+  document.getElementById('setting-ibit-shares').value = s.ibitShares;
+  document.getElementById('setting-ibit-basis').value = s.ibitBasis;
+  document.getElementById('setting-strf-shares').value = s.strcShares;
+  document.getElementById('setting-strf-basis').value = s.strcBasis;
   document.getElementById('setting-margin').value = s.margin;
-  document.getElementById('setting-btc').value = s.btcHoldings;
+  document.getElementById('setting-cash').value = s.cash;
+  document.getElementById('setting-btc-cold').value = s.btcCold;
+  document.getElementById('setting-btc-coinbase').value = s.btcCoinbase;
+  document.getElementById('setting-btc-basis').value = s.btcBasis;
+  document.getElementById('setting-btc-loan').value = s.btcLoan;
+  document.getElementById('setting-btc-loan-rate').value = s.btcLoanRate;
   document.getElementById('setting-strat-btc').value = s.stratBtc;
   document.getElementById('setting-strat-shares').value = s.stratShares;
   document.getElementById('setting-strat-debt').value = s.stratDebt;
@@ -1273,10 +1345,19 @@ function openSettings() {
 function saveSettings() {
   state.settings.tradierToken = document.getElementById('tradier-token').value;
   state.settings.shares = parseInt(document.getElementById('setting-shares').value);
-  state.settings.basis = parseFloat(document.getElementById('setting-basis').value);
-  state.settings.cash = parseFloat(document.getElementById('setting-cash').value);
+  state.settings.mstrBasis = parseFloat(document.getElementById('setting-mstr-basis').value);
+  state.settings.ibitShares = parseInt(document.getElementById('setting-ibit-shares').value);
+  state.settings.ibitBasis = parseFloat(document.getElementById('setting-ibit-basis').value);
+  state.settings.strcShares = parseInt(document.getElementById('setting-strf-shares').value);
+  state.settings.strcBasis = parseFloat(document.getElementById('setting-strf-basis').value);
   state.settings.margin = parseFloat(document.getElementById('setting-margin').value);
-  state.settings.btcHoldings = parseFloat(document.getElementById('setting-btc').value);
+  state.settings.cash = parseFloat(document.getElementById('setting-cash').value);
+  state.settings.btcCold = parseFloat(document.getElementById('setting-btc-cold').value);
+  state.settings.btcCoinbase = parseFloat(document.getElementById('setting-btc-coinbase').value);
+  state.settings.btcHoldings = state.settings.btcCold + state.settings.btcCoinbase;
+  state.settings.btcBasis = parseFloat(document.getElementById('setting-btc-basis').value);
+  state.settings.btcLoan = parseFloat(document.getElementById('setting-btc-loan').value);
+  state.settings.btcLoanRate = parseFloat(document.getElementById('setting-btc-loan-rate').value);
   state.settings.stratBtc = parseInt(document.getElementById('setting-strat-btc').value);
   state.settings.stratShares = parseInt(document.getElementById('setting-strat-shares').value);
   state.settings.stratDebt = parseInt(document.getElementById('setting-strat-debt').value);
@@ -1365,9 +1446,6 @@ async function fetchStrategyData() {
           // CoinGecko doesn't give shares directly, keep existing or derive
         }
         console.log(`Strategy data updated: ${strategy.total_holdings.toLocaleString()} BTC`);
-        document.getElementById('strat-fetch-status').textContent =
-          'Updated ' + new Date().toLocaleTimeString();
-        document.getElementById('strat-fetch-status').style.color = 'var(--green)';
         saveState();
         return true;
       }
@@ -1375,8 +1453,7 @@ async function fetchStrategyData() {
     return false;
   } catch(e) {
     console.error('Strategy fetch failed', e);
-    document.getElementById('strat-fetch-status').textContent = 'Fetch failed';
-    document.getElementById('strat-fetch-status').style.color = 'var(--red)';
+    console.warn('Strategy fetch failed');
     return false;
   }
 }
@@ -1783,7 +1860,7 @@ function updateAll() {
 
 async function refreshAll() {
   await fetchBtcPrice();
-  await fetchMstrPrice();
+  await fetchEquityPrices();
   await fetchStrategyData();
   await fetchAllOptionsChains();
   await loadChainExpirations();
