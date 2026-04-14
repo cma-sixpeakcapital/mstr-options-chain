@@ -230,6 +230,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="port-assets">--</div></div>
         <div class="metric"><div class="metric-label">Total Debt</div><div class="metric-value down" id="port-debt">--</div></div>
         <div class="metric"><div class="metric-label">Combined LTV</div><div class="metric-value" id="port-combined-ltv">--</div></div>
+        <div class="metric"><div class="metric-label">Est. BTC Exposure</div><div class="metric-value" id="port-btc-exposure" style="color:var(--btc)">--</div></div>
         <div class="metric"><div class="metric-label">Net Value</div><div class="metric-value" id="port-total" style="color:var(--rust);font-size:24px">--</div></div>
       </div>
       <div style="margin-top:12px">
@@ -327,44 +328,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       </div>
     </div>
 
-    <!-- Panel 4: Roll Decision Alerts -->
-    <div class="panel">
-      <div class="panel-header">
-        <span class="panel-title">Roll Decision Engine</span>
-        <span class="panel-badge badge-live">LIVE</span>
-      </div>
-      <div id="roll-decisions"></div>
-    </div>
-
-    <!-- Panel 5: Scenario Projections -->
-    <div class="panel full-width">
-      <div class="panel-header">
-        <span class="panel-title">Scenario Projection vs Actuals — Apr 2026 → Nov 2027</span>
-        <span class="panel-badge badge-live">LIVE</span>
-      </div>
-      <div class="chart-container"><canvas id="scenarioChart"></canvas></div>
-      <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--text3);flex-wrap:wrap">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--green);margin-right:4px"></span>S1: Light Bear → exit Nov 2026</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--red);margin-right:4px"></span>S2: Crash First → exit Apr 2027</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--purple);margin-right:4px"></span>S3: V-Shape → hold Nov 2027</span>
-        <span><span style="display:inline-block;width:10px;height:2px;border-radius:1px;background:var(--rust-glow);margin-right:4px;vertical-align:middle"></span>EXIT TRIGGER $1.8M</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--rust);margin-right:4px"></span>Actual Portfolio</span>
-      </div>
-      <!-- Projected BTC & MSTR Prices Table -->
-      <div style="margin-top:16px;overflow-x:auto">
-        <table id="scenarioPriceTable" style="font-size:11px;min-width:900px">
-          <thead>
-            <tr>
-              <th style="border-bottom:2px solid var(--rust);min-width:70px"></th>
-              <th id="spt-h" colspan="21" style="border-bottom:2px solid var(--rust);font-size:9px;letter-spacing:0.15em;text-align:center">PROJECTED PRICES BY MONTH</th>
-            </tr>
-          </thead>
-          <tbody id="scenarioPriceBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Panel 6b: Options Chain for Next Roll Target -->
+    <!-- Options Chain (right below covered calls) -->
     <div class="panel full-width">
       <div class="panel-header">
         <span class="panel-title">Options Chain — Next Roll Target</span>
@@ -412,6 +376,43 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <div id="rollInstrSummary" style="margin-bottom:12px"></div>
         <div id="rollInstrCards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
         <div id="rollInstrTotals" style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)"></div>
+      </div>
+    </div>
+
+    <!-- Roll Decision Alerts -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Roll Decision Engine</span>
+        <span class="panel-badge badge-live">LIVE</span>
+      </div>
+      <div id="roll-decisions"></div>
+    </div>
+
+    <!-- Scenario Projections -->
+    <div class="panel full-width">
+      <div class="panel-header">
+        <span class="panel-title">Scenario Projection vs Actuals — Apr 2026 → Nov 2027</span>
+        <span class="panel-badge badge-live">LIVE</span>
+      </div>
+      <div class="chart-container" style="height:500px"><canvas id="scenarioChart"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--text3);flex-wrap:wrap">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--green);margin-right:4px"></span>S1: Light Bear → exit Nov 2026</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--red);margin-right:4px"></span>S2: Crash First → exit Apr 2027</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--purple);margin-right:4px"></span>S3: V-Shape → hold Nov 2027</span>
+        <span><span style="display:inline-block;width:10px;height:2px;border-radius:1px;background:var(--rust-glow);margin-right:4px;vertical-align:middle"></span>EXIT TRIGGER $1.8M</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--rust);margin-right:4px"></span>Actual Portfolio</span>
+      </div>
+      <!-- Projected BTC & MSTR Prices Table -->
+      <div style="margin-top:16px;overflow-x:auto">
+        <table id="scenarioPriceTable" style="font-size:11px;min-width:900px">
+          <thead>
+            <tr>
+              <th style="border-bottom:2px solid var(--rust);min-width:70px"></th>
+              <th id="spt-h" colspan="21" style="border-bottom:2px solid var(--rust);font-size:9px;letter-spacing:0.15em;text-align:center">PROJECTED PRICES BY MONTH</th>
+            </tr>
+          </thead>
+          <tbody id="scenarioPriceBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -941,6 +942,14 @@ function updatePortfolio() {
   const combinedLtv = pv.totalAssets > 0 ? (pv.totalDebt / pv.totalAssets * 100) : 0;
   document.getElementById('port-combined-ltv').textContent = combinedLtv.toFixed(1) + '%';
   document.getElementById('port-combined-ltv').style.color = combinedLtv > 40 ? 'var(--red)' : combinedLtv > 30 ? 'var(--orange)' : 'var(--green)';
+
+  // Est. BTC Exposure: direct BTC + MSTR BTC (via mNAV) + IBIT BTC equivalent
+  const mstrBtcPerShare = state.btcPrice > 0 ? (s.stratBtc / (s.stratShares * 1000)) : 0;
+  const mstrBtcEquiv = s.shares * mstrBtcPerShare;
+  const ibitBtcEquiv = state.btcPrice > 0 ? pv.ibitVal / state.btcPrice : 0;
+  const totalBtcExposure = s.btcHoldings + mstrBtcEquiv + ibitBtcEquiv;
+  document.getElementById('port-btc-exposure').textContent = totalBtcExposure.toFixed(1) + ' BTC (~$' + Math.round(totalBtcExposure * state.btcPrice / 1000).toLocaleString() + 'K)';
+
   document.getElementById('port-total').textContent = '$' + Math.round(pv.net).toLocaleString();
 
   const gain = pv.net - 670038;
@@ -1154,36 +1163,49 @@ function initCharts() {
   const sCtx = document.getElementById('scenarioChart');
   if (!sCtx) return;
 
-  // Scenario projections with actual dates, $1.8M exit trigger
-  // Month 0 = current (Mar 29, 2026), Month 1 = Apr 2026, etc.
+  const s = state.settings;
   const labels = ['Now','Apr 26','May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27','Apr 27','May 27','Jun 27','Jul 27','Aug 27','Sep 27','Oct 27','Nov 27'];
 
-  // ── Portfolio values ($K) ──
-  const s1 = [777,900,840,870,925,1060,1210,1420,1610,1780,1980,2200,2410,2620,2840,3050,3260,3350,3420,3460,3500];
-  const s2 = [777,810,680,720,810,850,885,920,890,925,1070,1230,1410,1620,1790,1965,2155,2335,2500,2660,2810];
-  const s3 = [777,855,1020,1260,1540,1810,2050,2350,2680,3020,3180,3350,3500,3620,3720,3800,3860,3900,3930,3950,3960];
-
   // ── Projected BTC prices ($K) per scenario ──
-  // S1: Sideways/dip Apr-Jul, rally Aug+
   const s1Btc = [68,66,60,62,66,78,92,110,128,145,165,185,205,225,245,265,280,290,296,300,305];
-  // S2: Crash to ~$42K, slow recovery, rally Jan 27+
   const s2Btc = [68,58,42,48,58,62,65,68,64,68,82,98,115,135,150,168,185,200,215,230,245];
-  // S3: V-shape rip
   const s3Btc = [68,65,82,105,130,155,180,210,245,280,295,310,320,330,335,340,345,348,350,352,355];
 
   // ── Projected MSTR prices ($) per scenario ──
-  // MSTR roughly tracks BTC with mNAV leverage (~1.1-1.3x)
   const s1Mstr = [125,120,108,112,122,148,178,218,256,295,340,385,430,475,520,560,595,620,635,645,655];
   const s2Mstr = [125,105,72,82,105,112,118,124,116,124,155,190,225,270,305,345,385,420,455,490,525];
   const s3Mstr = [125,118,155,205,260,320,380,450,530,615,650,685,715,740,760,775,790,800,808,815,820];
+
+  // ── Compute portfolio values from projected prices ──
+  // IBIT tracks BTC: ibitPrice ≈ btcPrice * ratio
+  const ibitRatio = 0.000566;
+  const totalDebt = s.margin + s.btcLoan;
+  const fixedAssets = s.strcShares * 100 + s.cash - totalDebt; // STRC ~$100 par + cash - debt
+
+  function calcScenario(btcArr, mstrArr) {
+    return btcArr.map((btcK, i) => {
+      const btcPrice = btcK * 1000;
+      const mstrPrice = mstrArr[i];
+      const ibitPrice = btcPrice * ibitRatio;
+      const mstrVal = s.shares * mstrPrice;
+      const ibitVal = s.ibitShares * ibitPrice;
+      const btcVal = s.btcHoldings * btcPrice;
+      return Math.round((mstrVal + ibitVal + btcVal + fixedAssets) / 1000);
+    });
+  }
+
+  const s1 = calcScenario(s1Btc, s1Mstr);
+  const s2 = calcScenario(s2Btc, s2Mstr);
+  const s3 = calcScenario(s3Btc, s3Mstr);
 
   const exitLine = Array(21).fill(1800);
 
   const actual = state.portfolioHistory.map(p => Math.round(p.value / 1000));
   while (actual.length < 21) actual.push(null);
 
-  // Store for tooltip access
-  const scenarioPrices = { s1Btc, s2Btc, s3Btc, s1Mstr, s2Mstr, s3Mstr };
+  // Find max for Y-axis (round up to nearest 500K)
+  const allVals = [...s1, ...s2, ...s3].filter(v => v !== null);
+  const maxVal = Math.ceil(Math.max(...allVals) / 500) * 500;
 
   scenarioChart = new Chart(sCtx, {
     type: 'line',
@@ -1219,7 +1241,7 @@ function initCharts() {
       }},
       scales: {
         x: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' } } },
-        y: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' }, callback: v => '$' + v + 'K' }, min: 500, max: 4000 }
+        y: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' }, callback: v => '$' + v + 'K', stepSize: 100 }, min: 0, max: maxVal }
       }
     }
   });
