@@ -391,7 +391,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
     <!-- Scenario Projections -->
     <div class="panel full-width">
       <div class="panel-header">
-        <span class="panel-title">Scenario Projection vs Actuals — Apr 2026 → Nov 2027</span>
+        <span class="panel-title">Scenario Projection vs Actuals — Jan 2026 → Nov 2027</span>
         <span class="panel-badge badge-live">LIVE</span>
       </div>
       <div class="chart-container" style="height:500px"><canvas id="scenarioChart"></canvas></div>
@@ -401,6 +401,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--purple);margin-right:4px"></span>S3: V-Shape → hold Nov 2027</span>
         <span><span style="display:inline-block;width:10px;height:2px;border-radius:1px;background:var(--rust-glow);margin-right:4px;vertical-align:middle"></span>EXIT TRIGGER $1.8M</span>
         <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--rust);margin-right:4px"></span>Actual Portfolio</span>
+        <span><span style="display:inline-block;width:10px;height:2px;border-radius:1px;background:#F7931A;margin-right:4px;vertical-align:middle"></span>BTC Price (right axis)</span>
       </div>
       <!-- Projected BTC & MSTR Prices Table -->
       <div style="margin-top:16px;overflow-x:auto">
@@ -408,7 +409,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
           <thead>
             <tr>
               <th style="border-bottom:2px solid var(--rust);min-width:70px"></th>
-              <th id="spt-h" colspan="21" style="border-bottom:2px solid var(--rust);font-size:9px;letter-spacing:0.15em;text-align:center">PROJECTED PRICES BY MONTH</th>
+              <th id="spt-h" colspan="23" style="border-bottom:2px solid var(--rust);font-size:9px;letter-spacing:0.15em;text-align:center">PROJECTED PRICES BY MONTH</th>
             </tr>
           </thead>
           <tbody id="scenarioPriceBody"></tbody>
@@ -1164,27 +1165,32 @@ function initCharts() {
   if (!sCtx) return;
 
   const s = state.settings;
-  const labels = ['Now','Apr 26','May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27','Apr 27','May 27','Jun 27','Jul 27','Aug 27','Sep 27','Oct 27','Nov 27'];
+  // Extended timeline: Jan 2026 → Nov 2027 (24 months)
+  const labels = ['Jan 26','Feb 26','Mar 26','Apr 26','May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27','Apr 27','May 27','Jun 27','Jul 27','Aug 27','Sep 27','Oct 27','Nov 27'];
+  const NOW_IDX = 3; // Apr 2026 = index 3
 
-  // ── Live prices for "Now" column ──
+  // ── Live prices ──
   const liveBtcK = Math.round(state.btcPrice / 1000);
   const liveMstr = Math.round(state.mstrPrice);
 
-  // ── Projected BTC prices ($K) per scenario ──
-  const s1Btc = [liveBtcK,66,60,62,66,78,92,110,128,145,165,185,205,225,245,265,280,290,296,300,305];
-  const s2Btc = [liveBtcK,58,42,48,58,62,65,68,64,68,82,98,115,135,150,168,185,200,215,230,245];
-  const s3Btc = [liveBtcK,65,82,105,130,155,180,210,245,280,295,310,320,330,335,340,345,348,350,352,355];
+  // ── Historical + Projected BTC prices ($K) ──
+  // Jan-Apr actual from CoinGecko/Tradier, Apr 26+ projected per scenario
+  const s1Btc = [88,79,67,liveBtcK, 66,60,62,66,78,92,110,128,145,165,185,205,225,245,265,280,290,296,300];
+  const s2Btc = [88,79,67,liveBtcK, 58,42,48,58,62,65,68,64,68,82,98,115,135,150,168,185,200,215,230];
+  const s3Btc = [88,79,67,liveBtcK, 65,82,105,130,155,180,210,245,280,295,310,320,330,335,340,345,348,350,355];
 
-  // ── Projected MSTR prices ($) per scenario ──
-  const s1Mstr = [liveMstr,120,108,112,122,148,178,218,256,295,340,385,430,475,520,560,595,620,635,645,655];
-  const s2Mstr = [liveMstr,105,72,82,105,112,118,124,116,124,155,190,225,270,305,345,385,420,455,490,525];
-  const s3Mstr = [liveMstr,118,155,205,260,320,380,450,530,615,650,685,715,740,760,775,790,800,808,815,820];
+  // ── Historical + Projected MSTR prices ($) ──
+  const s1Mstr = [155,140,129,liveMstr, 120,108,112,122,148,178,218,256,295,340,385,430,475,520,560,595,620,635,645];
+  const s2Mstr = [155,140,129,liveMstr, 105,72,82,105,112,118,124,116,124,155,190,225,270,305,345,385,420,455,490];
+  const s3Mstr = [155,140,129,liveMstr, 118,155,205,260,320,380,450,530,615,650,685,715,740,760,775,790,800,808,815];
+
+  // ── BTC price line ($K) — shared actual history, then S1 projected ──
+  const btcPriceLine = [88,79,67,liveBtcK, null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null];
 
   // ── Compute portfolio values from projected prices ──
-  // IBIT tracks BTC: ibitPrice ≈ btcPrice * ratio
   const ibitRatio = state.btcPrice > 0 ? state.ibitPrice / state.btcPrice : 0.000566;
   const totalDebt = s.margin + s.btcLoan;
-  const fixedAssets = s.strcShares * 100 + s.cash - totalDebt; // STRC ~$100 par + cash - debt
+  const fixedAssets = s.strcShares * 100 + s.cash - totalDebt;
 
   function calcScenario(btcArr, mstrArr) {
     return btcArr.map((btcK, i) => {
@@ -1202,24 +1208,16 @@ function initCharts() {
   const s2 = calcScenario(s2Btc, s2Mstr);
   const s3 = calcScenario(s3Btc, s3Mstr);
 
-  const exitLine = Array(21).fill(1800);
+  const exitLine = Array(23).fill(1800);
 
-  // ── Actual portfolio line: map history dates to month indices + live value ──
-  // Month 0 = Now (Apr 2026), Month 1 = May 2026, etc.
-  const baseDate = new Date(2026, 3, 1); // Apr 2026
-  const actual = Array(21).fill(null);
+  // ── Actual portfolio line: historical + live value ──
+  // Calculated from actual prices: Jan=1163, Feb=1011, Mar=829, Apr(live)
   const liveNet = calcPortfolioValue().net;
-  actual[0] = Math.round(liveNet / 1000); // Always show live value at "Now"
-  state.portfolioHistory.forEach(p => {
-    const d = new Date(p.date);
-    const monthDiff = (d.getFullYear() - baseDate.getFullYear()) * 12 + (d.getMonth() - baseDate.getMonth());
-    if (monthDiff >= 1 && monthDiff < 21) {
-      actual[monthDiff] = Math.round(p.value / 1000);
-    }
-  });
+  const actual = [1163, 1011, 829, Math.round(liveNet / 1000)];
+  while (actual.length < 23) actual.push(null);
 
-  // Find max for Y-axis (round up to nearest 500K)
-  const allVals = [...s1, ...s2, ...s3].filter(v => v !== null);
+  // Find max for Y-axis
+  const allVals = [...s1, ...s2, ...s3, ...actual].filter(v => v !== null);
   const maxVal = Math.ceil(Math.max(...allVals) / 500) * 500;
 
   scenarioChart = new Chart(sCtx, {
@@ -1231,7 +1229,8 @@ function initCharts() {
         { label: 'S2: Crash First', data: s2, borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,.05)', fill: true, tension: .3, borderWidth: 2, pointRadius: 0 },
         { label: 'S3: V-Shape', data: s3, borderColor: '#8B5CF6', backgroundColor: 'rgba(139,92,246,.05)', fill: true, tension: .3, borderWidth: 2, pointRadius: 0 },
         { label: 'EXIT $1.8M', data: exitLine, borderColor: '#E8935A', borderDash: [8,4], borderWidth: 1.5, pointRadius: 0, fill: false },
-        { label: 'Actual', data: actual, borderColor: '#C4581A', backgroundColor: 'rgba(196,88,26,.1)', fill: true, tension: .3, borderWidth: 3, pointRadius: 4, pointBackgroundColor: '#C4581A', spanGaps: true }
+        { label: 'Actual', data: actual, borderColor: '#C4581A', backgroundColor: 'rgba(196,88,26,.15)', fill: true, tension: .3, borderWidth: 3, pointRadius: 5, pointBackgroundColor: '#C4581A', spanGaps: true },
+        { label: 'BTC Price', data: btcPriceLine, borderColor: '#F7931A', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4,3], pointRadius: 3, pointBackgroundColor: '#F7931A', fill: false, spanGaps: true, yAxisID: 'yBtc' }
       ]
     },
     options: {
@@ -1246,6 +1245,7 @@ function initCharts() {
             if (ctx.raw === null) return null;
             const i = ctx.dataIndex;
             const ds = ctx.dataset.label;
+            if (ds === 'BTC Price') return 'BTC: $' + ctx.raw.toLocaleString() + 'K';
             let line = ds + ': $' + ctx.raw.toLocaleString() + 'K';
             if (ds.includes('S1')) line += '  (BTC $' + (s1Btc[i]||'—') + 'K · MSTR $' + (s1Mstr[i]||'—') + ')';
             else if (ds.includes('S2')) line += '  (BTC $' + (s2Btc[i]||'—') + 'K · MSTR $' + (s2Mstr[i]||'—') + ')';
@@ -1256,7 +1256,8 @@ function initCharts() {
       }},
       scales: {
         x: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' } } },
-        y: { grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' }, callback: v => '$' + v + 'K', stepSize: 100 }, min: 0, max: maxVal }
+        y: { position: 'left', grid: { color: 'rgba(191,199,218,.06)' }, ticks: { color: '#94A3B8', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' }, callback: v => '$' + v + 'K', stepSize: 100 }, min: 0, max: maxVal },
+        yBtc: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#F7931A', font: { size: 10, family: 'Aptos, DM Sans, Segoe UI, sans-serif' }, callback: v => '$' + v + 'K' }, min: 0, max: Math.ceil(Math.max(...s3Btc) / 50) * 50 }
       }
     }
   });
