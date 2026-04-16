@@ -229,7 +229,6 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       <div class="metric-grid">
         <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="port-assets">--</div></div>
         <div class="metric"><div class="metric-label">Total Debt</div><div class="metric-value down" id="port-debt">--</div></div>
-        <div class="metric"><div class="metric-label">Cost to Close Calls</div><div class="metric-value down" id="port-options-pl">--</div></div>
         <div class="metric"><div class="metric-label">Combined LTV</div><div class="metric-value" id="port-combined-ltv">--</div></div>
         <div class="metric"><div class="metric-label">Est. BTC Exposure</div><div class="metric-value" id="port-btc-exposure" style="color:var(--btc)">--</div></div>
         <div class="metric"><div class="metric-label">Net Value</div><div class="metric-value" id="port-total" style="color:var(--rust);font-size:24px">--</div></div>
@@ -791,7 +790,21 @@ function estimateDelta(strike, dte, iv) {
 
 function calcPortfolioValue() {
   const s = state.settings;
-  const mstrVal = s.shares * state.mstrPrice;
+  // MSTR valuation caps shares at strike for ITM short calls (plan: let calls expire, accept assignment).
+  // Assign ITM calls from lowest strike up — each contract caps 100 shares at its strike.
+  const mstrLive = state.mstrPrice;
+  const sortedCalls = [...state.positions].sort((a, b) => a.strike - b.strike);
+  let cappedShares = 0;
+  let cappedValue = 0;
+  for (const c of sortedCalls) {
+    if (mstrLive > c.strike) {
+      const sh = c.contracts * 100;
+      cappedShares += sh;
+      cappedValue += sh * c.strike;
+    }
+  }
+  const uncappedShares = Math.max(0, s.shares - cappedShares);
+  const mstrVal = uncappedShares * mstrLive + cappedValue;
   const ibitVal = s.ibitShares * state.ibitPrice;
   const strcVal = s.strcShares * state.strcPrice;
   const totalPremium = state.rolls.reduce((sum, r) => sum + (r.credit * r.contracts * 100), 0);
@@ -803,14 +816,9 @@ function calcPortfolioValue() {
   const totalDebt = s.margin + btcLoan;
   const brokerageAssets = mstrVal + ibitVal + strcVal + cashRemaining;
   const totalAssets = brokerageAssets + btcVal;
-  // Cash required to close open short calls (buy-back cost using live mid if available)
-  const optionsCloseCost = state.positions.reduce((sum, p) => {
-    const mid = p.liveMid || p.currentPrice || 0;
-    return sum + (mid * p.contracts * 100);
-  }, 0);
   return { mstrVal, ibitVal, strcVal, cashRemaining, btcVal, margin: s.margin, btcLoan, totalDebt, totalPremium,
-    brokerageAssets, totalAssets, dcaTotal, dcaSpent, optionsCloseCost,
-    net: totalAssets - totalDebt - optionsCloseCost };
+    brokerageAssets, totalAssets, dcaTotal, dcaSpent, cappedShares,
+    net: totalAssets - totalDebt };
 }
 
 function btcToBreachStrike(strike) {
@@ -946,9 +954,6 @@ function updatePortfolio() {
   // ── Net Portfolio ──
   document.getElementById('port-assets').textContent = '$' + Math.round(pv.totalAssets).toLocaleString();
   document.getElementById('port-debt').textContent = '($' + Math.round(pv.totalDebt).toLocaleString() + ')';
-  const optEl = document.getElementById('port-options-pl');
-  optEl.textContent = '($' + Math.round(pv.optionsCloseCost).toLocaleString() + ')';
-  optEl.style.color = 'var(--red)';
   const combinedLtv = pv.totalAssets > 0 ? (pv.totalDebt / pv.totalAssets * 100) : 0;
   document.getElementById('port-combined-ltv').textContent = combinedLtv.toFixed(1) + '%';
   document.getElementById('port-combined-ltv').style.color = combinedLtv > 40 ? 'var(--red)' : combinedLtv > 30 ? 'var(--orange)' : 'var(--green)';
