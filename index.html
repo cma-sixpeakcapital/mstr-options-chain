@@ -803,8 +803,11 @@ function calcPortfolioValue() {
   const totalDebt = s.margin + btcLoan;
   const brokerageAssets = mstrVal + ibitVal + strcVal + cashRemaining;
   const totalAssets = brokerageAssets + btcVal;
-  // Cash required to close open short calls (buy-back cost = currentPrice * contracts * 100)
-  const optionsCloseCost = state.positions.reduce((sum, p) => sum + ((p.currentPrice || 0) * p.contracts * 100), 0);
+  // Cash required to close open short calls (buy-back cost using live mid if available)
+  const optionsCloseCost = state.positions.reduce((sum, p) => {
+    const mid = p.liveMid || p.currentPrice || 0;
+    return sum + (mid * p.contracts * 100);
+  }, 0);
   return { mstrVal, ibitVal, strcVal, cashRemaining, btcVal, margin: s.margin, btcLoan, totalDebt, totalPremium,
     brokerageAssets, totalAssets, dcaTotal, dcaSpent, optionsCloseCost,
     net: totalAssets - totalDebt - optionsCloseCost };
