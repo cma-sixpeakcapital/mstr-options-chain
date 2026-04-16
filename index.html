@@ -229,7 +229,7 @@ button.danger:hover{background:var(--red);border-color:var(--red)}
       <div class="metric-grid">
         <div class="metric"><div class="metric-label">Total Assets</div><div class="metric-value" id="port-assets">--</div></div>
         <div class="metric"><div class="metric-label">Total Debt</div><div class="metric-value down" id="port-debt">--</div></div>
-        <div class="metric"><div class="metric-label">Open Options P&L</div><div class="metric-value" id="port-options-pl">--</div></div>
+        <div class="metric"><div class="metric-label">Cost to Close Calls</div><div class="metric-value down" id="port-options-pl">--</div></div>
         <div class="metric"><div class="metric-label">Combined LTV</div><div class="metric-value" id="port-combined-ltv">--</div></div>
         <div class="metric"><div class="metric-label">Est. BTC Exposure</div><div class="metric-value" id="port-btc-exposure" style="color:var(--btc)">--</div></div>
         <div class="metric"><div class="metric-label">Net Value</div><div class="metric-value" id="port-total" style="color:var(--rust);font-size:24px">--</div></div>
@@ -803,11 +803,11 @@ function calcPortfolioValue() {
   const totalDebt = s.margin + btcLoan;
   const brokerageAssets = mstrVal + ibitVal + strcVal + cashRemaining;
   const totalAssets = brokerageAssets + btcVal;
-  // Estimated open options P&L (short calls: profit = (premium - currentPrice) * contracts * 100)
-  const optionsPL = state.positions.reduce((sum, p) => sum + ((p.premium - (p.currentPrice || 0)) * p.contracts * 100), 0);
+  // Cash required to close open short calls (buy-back cost = currentPrice * contracts * 100)
+  const optionsCloseCost = state.positions.reduce((sum, p) => sum + ((p.currentPrice || 0) * p.contracts * 100), 0);
   return { mstrVal, ibitVal, strcVal, cashRemaining, btcVal, margin: s.margin, btcLoan, totalDebt, totalPremium,
-    brokerageAssets, totalAssets, dcaTotal, dcaSpent, optionsPL,
-    net: totalAssets - totalDebt + optionsPL };
+    brokerageAssets, totalAssets, dcaTotal, dcaSpent, optionsCloseCost,
+    net: totalAssets - totalDebt - optionsCloseCost };
 }
 
 function btcToBreachStrike(strike) {
@@ -944,8 +944,8 @@ function updatePortfolio() {
   document.getElementById('port-assets').textContent = '$' + Math.round(pv.totalAssets).toLocaleString();
   document.getElementById('port-debt').textContent = '($' + Math.round(pv.totalDebt).toLocaleString() + ')';
   const optEl = document.getElementById('port-options-pl');
-  optEl.textContent = (pv.optionsPL >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(pv.optionsPL)).toLocaleString();
-  optEl.style.color = pv.optionsPL >= 0 ? 'var(--green)' : 'var(--red)';
+  optEl.textContent = '($' + Math.round(pv.optionsCloseCost).toLocaleString() + ')';
+  optEl.style.color = 'var(--red)';
   const combinedLtv = pv.totalAssets > 0 ? (pv.totalDebt / pv.totalAssets * 100) : 0;
   document.getElementById('port-combined-ltv').textContent = combinedLtv.toFixed(1) + '%';
   document.getElementById('port-combined-ltv').style.color = combinedLtv > 40 ? 'var(--red)' : combinedLtv > 30 ? 'var(--orange)' : 'var(--green)';
